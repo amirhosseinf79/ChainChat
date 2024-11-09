@@ -151,12 +151,10 @@ class MessageController(BaseMessage):
 def create_profile(sender, instance, **kwargs):
     Profile.objects.get_or_create(user=instance)
 
-
 # Auto create chat for group
 @receiver(post_save, sender=Group)
 def create_chat(sender, instance, **kwargs):
     Chat.objects.get_or_create(group=instance)
-
 
 # Handle Messages by Signal
 def update_controller(obj, instance):
