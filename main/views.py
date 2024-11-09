@@ -2,7 +2,7 @@ from django.contrib.auth.models import User
 from django.http import HttpResponse
 from django.shortcuts import render
 
-from main.models.group import Group
+from main.models import Group
 
 
 # Create your views here.

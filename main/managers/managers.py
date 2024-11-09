@@ -20,3 +20,8 @@ class GroupManager(CustomManager):
         obj.admins.create(admin_id=user.id)
         obj.chat.members.create(member_id=user.id)
         return obj
+
+
+class MessageManager(CustomManager):
+    def create_message(self):
+        pass

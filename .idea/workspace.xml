@@ -4,39 +4,22 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="0b27a68d-b2cf-4003-9cd8-0dca8e94378c" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/.idea/ChainChat.iml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/inspectionProfiles/profiles_settings.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/modules.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/ChainChat/__init__.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/ChainChat/asgi.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/ChainChat/settings.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/ChainChat/urls.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/ChainChat/wsgi.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/main/__init__.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/main/admin.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/main/apps.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/main/managers/__init__.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/main/managers/managers.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/main/migrations/__init__.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/main/models.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/main/models/__init__.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/main/models/base.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/main/models/chat.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/main/models/chatMember.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/main/models/group.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/main/models/groupAdmin.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/main/models/message.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/main/models/photo.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/main/models/profile.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/main/models/video.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/main/tests.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/main/urls.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/main/views.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/manage.py" afterDir="false" />
+    <list default="true" id="0b27a68d-b2cf-4003-9cd8-0dca8e94378c" name="Changes" comment="init commit">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ChainChat/settings.py" beforeDir="false" afterPath="$PROJECT_DIR$/ChainChat/settings.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/main/admin.py" beforeDir="false" afterPath="$PROJECT_DIR$/main/admin.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/main/managers/managers.py" beforeDir="false" afterPath="$PROJECT_DIR$/main/managers/managers.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/main/models/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/main/models.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/main/models/base.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/main/models/chat.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/main/models/chatMember.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/main/models/group.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/main/models/groupAdmin.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/main/models/message.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/main/models/photo.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/main/models/profile.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/main/models/video.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/main/views.py" beforeDir="false" afterPath="$PROJECT_DIR$/main/views.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -132,11 +115,30 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1731143446000</updated>
-      <workItem from="1731143485280" duration="21378000" />
+      <workItem from="1731143485280" duration="31205000" />
     </task>
+    <task id="LOCAL‎−۰۰۰۰۱" summary="init commit">
+      <option name="closed" value="true" />
+      <created>1731165854074</created>
+      <option name="number" value="LOCAL‎−۰۰۰۰۱" />
+      <option name="presentableId" value="LOCAL‎−۰۰۰۰۱" />
+      <updated>1731165854074</updated>
+    </task>
+    <task id="LOCAL‎−۰۰۰۰۲" summary="init commit">
+      <option name="closed" value="true" />
+      <created>1731165912591</created>
+      <option name="number" value="LOCAL‎−۰۰۰۰۲" />
+      <option name="presentableId" value="LOCAL‎−۰۰۰۰۲" />
+      <updated>1731165912591</updated>
+    </task>
+    <option name="localTasksCounter" value="3" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="3" />
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="init commit" />
+    <option name="LAST_COMMIT_MESSAGE" value="init commit" />
   </component>
 </project>
