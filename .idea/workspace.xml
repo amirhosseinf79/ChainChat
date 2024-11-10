@@ -4,18 +4,10 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="0b27a68d-b2cf-4003-9cd8-0dca8e94378c" name="Changes" comment="add requirements">
-      <change afterPath="$PROJECT_DIR$/main/api/__init__.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/main/api/paginations/__init__.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/main/api/paginations/custom.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/main/api/serializers/__init__.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/main/api/serializers/allMessages.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/main/api/serializers/chatMembers.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/main/api/serializers/users.py" afterDir="false" />
+    <list default="true" id="0b27a68d-b2cf-4003-9cd8-0dca8e94378c" name="Changes" comment="update git ignore">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ChainChat/settings.py" beforeDir="false" afterPath="$PROJECT_DIR$/ChainChat/settings.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ChainChat/urls.py" beforeDir="false" afterPath="$PROJECT_DIR$/ChainChat/urls.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main/admin.py" beforeDir="false" afterPath="$PROJECT_DIR$/main/admin.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/main/api/serializers/allMessages.py" beforeDir="false" afterPath="$PROJECT_DIR$/main/api/serializers/allMessages.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main/managers/managers.py" beforeDir="false" afterPath="$PROJECT_DIR$/main/managers/managers.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main/models.py" beforeDir="false" afterPath="$PROJECT_DIR$/main/models.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main/urls.py" beforeDir="false" afterPath="$PROJECT_DIR$/main/urls.py" afterDir="false" />
@@ -118,7 +110,7 @@
       <option name="presentableId" value="Default" />
       <updated>1731143446000</updated>
       <workItem from="1731143485280" duration="49040000" />
-      <workItem from="1731240858816" duration="20376000" />
+      <workItem from="1731240858816" duration="28801000" />
     </task>
     <task id="LOCAL‎−۰۰۰۰۱" summary="init commit">
       <option name="closed" value="true" />
@@ -155,7 +147,21 @@
       <option name="presentableId" value="LOCAL‎−۰۰۰۰۵" />
       <updated>1731188776767</updated>
     </task>
-    <option name="localTasksCounter" value="6" />
+    <task id="LOCAL‎−۰۰۰۰۶" summary="add more functions">
+      <option name="closed" value="true" />
+      <created>1731261923765</created>
+      <option name="number" value="LOCAL‎−۰۰۰۰۶" />
+      <option name="presentableId" value="LOCAL‎−۰۰۰۰۶" />
+      <updated>1731261923765</updated>
+    </task>
+    <task id="LOCAL‎−۰۰۰۰۷" summary="update git ignore">
+      <option name="closed" value="true" />
+      <created>1731262016663</created>
+      <option name="number" value="LOCAL‎−۰۰۰۰۷" />
+      <option name="presentableId" value="LOCAL‎−۰۰۰۰۷" />
+      <updated>1731262016663</updated>
+    </task>
+    <option name="localTasksCounter" value="8" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -166,6 +172,8 @@
     <MESSAGE value="make models ready to use" />
     <MESSAGE value="." />
     <MESSAGE value="add requirements" />
-    <option name="LAST_COMMIT_MESSAGE" value="add requirements" />
+    <MESSAGE value="add more functions" />
+    <MESSAGE value="update git ignore" />
+    <option name="LAST_COMMIT_MESSAGE" value="update git ignore" />
   </component>
 </project>
