@@ -2,5 +2,4 @@
 /db.sqlite3
 /media
 /.idea
-/__pycache__/
 /ChainChat/__pycache__
