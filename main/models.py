@@ -153,8 +153,8 @@ class BaseMessage(BaseModel):
     seen_at = models.DateTimeField(null=True, blank=True)
     delete_for_me = models.BooleanField(default=False)
 
-    filtered_objects = FilteredMessageManager()
     objects = MessageManager()
+    filtered_objects = FilteredMessageManager()
 
     class Meta:
         abstract = True

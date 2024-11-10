@@ -76,19 +76,19 @@ class MessageManager(models.Manager):
         return self.create(chat_id=chat_id, author=author, **kwargs)
 
     def edit_message(self, message_id, chat_id, author, **kwargs):
-        obj = self.filter(id=message_id).update(author=author, chat_id=chat_id, **kwargs)
-        return obj
+        self.filter(id=message_id).update(author=author, chat_id=chat_id, **kwargs)
+        return None
 
-    def delete_message(self, message_id, chat_id, author, for_me):
+    def delete_message(self, message_id, chat_id, author, for_everyone=False):
         try:
             obj = self.get(chat_id=chat_id, author=author, id=message_id)
         except ObjectDoesNotExist:
             raise Http404
 
-        if for_me:
-            obj.delete_for_me = True
-        else:
+        if for_everyone:
             obj.is_deleted = True
+        else:
+            obj.delete_for_me = True
 
         obj.save()
         return None
