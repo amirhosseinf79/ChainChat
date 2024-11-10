@@ -1,20 +1,50 @@
+from django.contrib.auth.models import User
 from django.db import models
+from django.db.models import Q
 
 
-class CustomManager(models.Manager):
+class FilteredManager(models.Manager):
     def get_queryset(self):
         return super().get_queryset().filter(is_deleted=False)
 
 
-class ChatManager(CustomManager):
-    def create_private_chat(self, user1, user2):
-        chat = self.create()
-        chat.members.add(user1)
-        chat.members.add(user2)
-        return chat
+class ChatManager(models.Manager):
+    def create_private_chat(self, me, user):
+        if me and user and me != user:
+            user1 = User.objects.filter(id=me)
+            user2 = User.objects.filter(id=user)
 
+            if user1.count() > 0 and user2.count() > 0:
+                chat_ins = self.filter(members__member_id=me).filter(members__member_id=user) \
+                    .filter(group__isnull=True).distinct()
 
-class GroupManager(CustomManager):
+                if chat_ins.exists():
+                    chat = chat_ins.first()
+                    obj, created = chat.members.get_or_create(member_id=me)
+                    obj.is_deleted = False
+                    obj.save()
+
+                    obj, created = chat.members.get_or_create(member_id=user)
+                    obj.is_deleted = False
+                    obj.save()
+                else:
+                    chat = self.create()
+                    chat.members.create(member_id=me)
+                    chat.members.create(member_id=user)
+
+                return chat
+
+        return None
+
+    def find_chat(self, title):
+        query = (Q(group__isnull=False) & Q(group__name__contains=title)) | \
+                (Q(group__isnull=True) & (Q(members__member__username__contains=title) |
+                                          Q(members__member__first_name__contains=title)))
+
+        obj_list = self.filter(query).distinct()
+        return obj_list
+
+class GroupManager(models.Manager):
     def create_group(self, name, user):
         obj = self.create(name=name)
         obj.admins.create(admin_id=user.id)
@@ -22,6 +52,11 @@ class GroupManager(CustomManager):
         return obj
 
 
-class MessageManager(CustomManager):
-    def create_message(self):
-        pass
+class FilteredChatManager(ChatManager):
+    def get_queryset(self):
+        return super().get_queryset().filter(is_deleted=False)
+
+
+class FilteredGroupManager(GroupManager):
+    def get_queryset(self):
+        return super().get_queryset().filter(is_deleted=False)

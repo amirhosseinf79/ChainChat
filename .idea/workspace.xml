@@ -4,21 +4,21 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="0b27a68d-b2cf-4003-9cd8-0dca8e94378c" name="Changes" comment="init commit">
+    <list default="true" id="0b27a68d-b2cf-4003-9cd8-0dca8e94378c" name="Changes" comment="add requirements">
+      <change afterPath="$PROJECT_DIR$/main/api/__init__.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/main/api/paginations/__init__.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/main/api/paginations/custom.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/main/api/serializers/__init__.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/main/api/serializers/allMessages.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/main/api/serializers/chatMembers.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/main/api/serializers/users.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/ChainChat/settings.py" beforeDir="false" afterPath="$PROJECT_DIR$/ChainChat/settings.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ChainChat/urls.py" beforeDir="false" afterPath="$PROJECT_DIR$/ChainChat/urls.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main/admin.py" beforeDir="false" afterPath="$PROJECT_DIR$/main/admin.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main/managers/managers.py" beforeDir="false" afterPath="$PROJECT_DIR$/main/managers/managers.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/main/models/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/main/models.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/main/models/base.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/main/models/chat.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/main/models/chatMember.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/main/models/group.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/main/models/groupAdmin.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/main/models/message.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/main/models/photo.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/main/models/profile.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/main/models/video.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/main/models.py" beforeDir="false" afterPath="$PROJECT_DIR$/main/models.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/main/urls.py" beforeDir="false" afterPath="$PROJECT_DIR$/main/urls.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main/views.py" beforeDir="false" afterPath="$PROJECT_DIR$/main/views.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -39,35 +39,37 @@
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
-  <component name="ProjectColorInfo"><![CDATA[{
-  "associatedIndex": 3
-}]]></component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 3
+}</component>
   <component name="ProjectId" id="2obfxkiaEXNMkqab738njT0zzsy" />
   <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "Django Server.ChainChat.executor": "Run",
-    "RunOnceActivity.OpenDjangoStructureViewOnStart": "true",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "git-widget-placeholder": "master",
-    "last_opened_file_path": "E:/Django/ChainChat/main/signals",
-    "node.js.detected.package.eslint": "true",
-    "node.js.detected.package.tslint": "true",
-    "node.js.selected.package.eslint": "(autodetect)",
-    "node.js.selected.package.tslint": "(autodetect)",
-    "nodejs_package_manager_path": "npm",
-    "vue.rearranger.settings.migration": "true"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;Django Server.ChainChat.executor&quot;: &quot;Run&quot;,
+    &quot;RunOnceActivity.OpenDjangoStructureViewOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.pycharm.django.structure.promotion.once.per.project&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;master&quot;,
+    &quot;last_opened_file_path&quot;: &quot;E:/Django/ChainChat/main/signals&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
-}]]></component>
+}</component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="E:\Django\ChainChat\main\signals" />
     </key>
     <key name="MoveFile.RECENT_KEYS">
+      <recent name="E:\Django\ChainChat\main\api\serializers" />
       <recent name="E:\Django\ChainChat\main\signals" />
       <recent name="E:\Django\ChainChat\main\managers" />
     </key>
@@ -115,7 +117,8 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1731143446000</updated>
-      <workItem from="1731143485280" duration="31205000" />
+      <workItem from="1731143485280" duration="49040000" />
+      <workItem from="1731240858816" duration="20376000" />
     </task>
     <task id="LOCAL‎−۰۰۰۰۱" summary="init commit">
       <option name="closed" value="true" />
@@ -131,7 +134,28 @@
       <option name="presentableId" value="LOCAL‎−۰۰۰۰۲" />
       <updated>1731165912591</updated>
     </task>
-    <option name="localTasksCounter" value="3" />
+    <task id="LOCAL‎−۰۰۰۰۳" summary="make models ready to use">
+      <option name="closed" value="true" />
+      <created>1731188610471</created>
+      <option name="number" value="LOCAL‎−۰۰۰۰۳" />
+      <option name="presentableId" value="LOCAL‎−۰۰۰۰۳" />
+      <updated>1731188610471</updated>
+    </task>
+    <task id="LOCAL‎−۰۰۰۰۴" summary=".">
+      <option name="closed" value="true" />
+      <created>1731188758690</created>
+      <option name="number" value="LOCAL‎−۰۰۰۰۴" />
+      <option name="presentableId" value="LOCAL‎−۰۰۰۰۴" />
+      <updated>1731188758690</updated>
+    </task>
+    <task id="LOCAL‎−۰۰۰۰۵" summary="add requirements">
+      <option name="closed" value="true" />
+      <created>1731188776767</created>
+      <option name="number" value="LOCAL‎−۰۰۰۰۵" />
+      <option name="presentableId" value="LOCAL‎−۰۰۰۰۵" />
+      <updated>1731188776767</updated>
+    </task>
+    <option name="localTasksCounter" value="6" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -139,6 +163,9 @@
   </component>
   <component name="VcsManagerConfiguration">
     <MESSAGE value="init commit" />
-    <option name="LAST_COMMIT_MESSAGE" value="init commit" />
+    <MESSAGE value="make models ready to use" />
+    <MESSAGE value="." />
+    <MESSAGE value="add requirements" />
+    <option name="LAST_COMMIT_MESSAGE" value="add requirements" />
   </component>
 </project>
