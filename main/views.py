@@ -1,3 +1,4 @@
+from django.core.exceptions import ValidationError
 from django.db.models import Q
 from django.http import Http404
 from rest_framework import status
@@ -8,7 +9,7 @@ from rest_framework.views import APIView
 from main.api.paginations.custom import CustomPagination
 from main.api.serializers.allMessages import AllMessageSerializer, ChatSerializer
 from main.api.serializers.chatMembers import ChatMemberSerializer
-from main.models import Chat, Group
+from main.models import Chat, Group, Message, Photo, Video
 
 
 class AuthRequiredView(APIView):
@@ -54,6 +55,11 @@ class CreateGroup(AuthRequiredView):
                 "details": "Got unexpected key!"
             }
             return Response(data, status=status.HTTP_400_BAD_REQUEST)
+        except ValidationError:
+            data = {
+                "details": "Got unexpected key!"
+            }
+            return Response(data, status=status.HTTP_400_BAD_REQUEST)
 
 class ChatCreateView(AuthRequiredView):
     def post(self, request):
@@ -62,6 +68,9 @@ class ChatCreateView(AuthRequiredView):
         try:
             obj = Chat.objects.create_private_chat(**raw_data)
         except TypeError:
+            obj = None
+
+        except ValidationError:
             obj = None
 
         if obj:
@@ -153,4 +162,74 @@ class ChatMembersView(ChatViewBase):
             serializer = ChatMemberSerializer(paginated_members, many=True, context={'user': request.user})
             return self.Response(serializer.data)
         else:
-            return Response(status=status.HTTP_404_NOT_FOUND)
+            raise Http404
+
+
+class ManageMessageBase(AuthRequiredView):
+    def decide_model(self, request):
+        msg_type = request.data.pop("message_type", None)
+
+        if msg_type == "message":
+            default_model = Message
+        elif msg_type == "photo":
+            default_model = Photo
+        elif msg_type == "video":
+            default_model = Video
+        else:
+            default_model = Message
+
+        return default_model
+
+    def handle_response(self, raw_data, func, status_code):
+        data = {}
+        try:
+            obj = func(**raw_data)
+            data.update({"success": True})
+            if obj:
+                data.update({"id": obj.id})
+            st = status_code
+        except TypeError:
+            data.update({"success": False, "details": "Unexpected value!"})
+            st = status.HTTP_400_BAD_REQUEST
+
+        except ValidationError:
+            data.update({"success": False, "details": "Got wrong value!"})
+            st = status.HTTP_400_BAD_REQUEST
+
+        return Response(data, status=st)
+
+    def create_model(self, request, pk, create_func):
+        raw_data = request.data
+        raw_data.update({"author": request.user, "chat_id": pk})
+        return  self.handle_response(raw_data, create_func, status.HTTP_201_CREATED)
+
+    def update_model(self, request, pk, update_func):
+        raw_data = request.data
+        raw_data.update({"author": request.user, "chat_id": pk})
+        return self.handle_response(raw_data, update_func, status.HTTP_200_OK)
+
+    def delete_model(self, request, pk, delete_func):
+        raw_data = request.data
+        raw_data.update({"author": request.user, "chat_id": pk})
+        return self.handle_response(raw_data, delete_func, status.HTTP_204_NO_CONTENT)
+
+
+class CreateMessageView(ManageMessageBase):
+    def post(self, request, pk):
+        default_model = self.decide_model(request)
+        return self.create_model(request, pk, default_model.filtered_objects.create_message)
+
+class EditMessageView(ManageMessageBase):
+    def put(self, request, pk):
+        default_model = self.decide_model(request)
+        return self.update_model(request, pk, default_model.filtered_objects.edit_message)
+
+class MessageReadView(ManageMessageBase):
+    def post(self, request, pk):
+        default_model = self.decide_model(request)
+        return self.update_model(request, pk, default_model.filtered_objects.mark_seen)
+
+class DeleteMessageView(ManageMessageBase):
+    def post(self, request, pk):
+        default_model = self.decide_model(request)
+        return self.delete_model(request, pk, default_model.filtered_objects.delete_message)

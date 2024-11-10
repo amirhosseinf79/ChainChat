@@ -53,19 +53,19 @@ class MessageSerializer(BaseMessageSerializer, serializers.ModelSerializer):
 
     class Meta:
         model = Message
-        fields = ("chat", "author", "text", "created_at", "updated_at", "edited_at", "seen_at")
+        fields = ("id", "chat", "author", "text", "created_at", "updated_at", "edited_at", "seen_at")
 
 
 class PhotoSerializer(BaseMessageSerializer, serializers.ModelSerializer):
     class Meta:
         model = Photo
-        fields = ("chat", "author", "image", "caption", "created_at", "updated_at", "edited_at", "seen_at")
+        fields = ("id", "chat", "author", "image", "caption", "created_at", "updated_at", "edited_at", "seen_at")
 
 
 class VideoSerializer(BaseMessageSerializer, serializers.ModelSerializer):
     class Meta:
         model = Video
-        fields = ("chat", "author", "video", "caption", "created_at", "updated_at", "edited_at", "seen_at")
+        fields = ("id", "chat", "author", "video", "caption", "created_at", "updated_at", "edited_at", "seen_at")
 
 
 class AllMessageSerializer(BaseMessageSerializer, serializers.ModelSerializer):
@@ -80,7 +80,7 @@ class AllMessageSerializer(BaseMessageSerializer, serializers.ModelSerializer):
     def to_representation(self, instance):
         data = super().to_representation(instance)
         new_data = {
-            "id": instance.id,
+            "id": 0,
         }
         for k, v in data.items():
             if v:

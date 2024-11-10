@@ -1,6 +1,9 @@
 from django.contrib.auth.models import User
+from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
 from django.db.models import Q
+from django.http import Http404
+from django.utils import timezone
 
 
 class FilteredManager(models.Manager):
@@ -44,6 +47,12 @@ class ChatManager(models.Manager):
         obj_list = self.filter(query).distinct()
         return obj_list
 
+
+class FilteredChatManager(ChatManager):
+    def get_queryset(self):
+        return super().get_queryset().filter(is_deleted=False)
+
+
 class GroupManager(models.Manager):
     def create_group(self, name, user):
         obj = self.create(name=name)
@@ -52,11 +61,39 @@ class GroupManager(models.Manager):
         return obj
 
 
-class FilteredChatManager(ChatManager):
+class FilteredGroupManager(GroupManager):
     def get_queryset(self):
         return super().get_queryset().filter(is_deleted=False)
 
 
-class FilteredGroupManager(GroupManager):
+class MessageManager(models.Manager):
+    def mark_seen(self, chat_id, author, message_id):
+        self.filter(chat_id=chat_id, seen_at__isnull=True, id__lte=message_id)\
+            .exclude(author=author).update(seen_at=timezone.now())
+        return None
+
+    def create_message(self, chat_id, author, **kwargs):
+        return self.create(chat_id=chat_id, author=author, **kwargs)
+
+    def edit_message(self, message_id, chat_id, author, **kwargs):
+        obj = self.filter(id=message_id).update(author=author, chat_id=chat_id, **kwargs)
+        return obj
+
+    def delete_message(self, message_id, chat_id, author, for_me):
+        try:
+            obj = self.get(chat_id=chat_id, author=author, id=message_id)
+        except ObjectDoesNotExist:
+            raise Http404
+
+        if for_me:
+            obj.delete_for_me = True
+        else:
+            obj.is_deleted = True
+
+        obj.save()
+        return None
+
+
+class FilteredMessageManager(MessageManager):
     def get_queryset(self):
         return super().get_queryset().filter(is_deleted=False)

@@ -5,7 +5,7 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 
 from main.managers.managers import FilteredManager, GroupManager, ChatManager, FilteredChatManager, \
-    FilteredGroupManager
+    FilteredGroupManager, MessageManager, FilteredMessageManager
 
 
 class Profile(models.Model):
@@ -152,6 +152,9 @@ class BaseMessage(BaseModel):
     edited_at = models.DateTimeField(null=True, blank=True)
     seen_at = models.DateTimeField(null=True, blank=True)
     delete_for_me = models.BooleanField(default=False)
+
+    filtered_objects = FilteredMessageManager()
+    objects = MessageManager()
 
     class Meta:
         abstract = True
