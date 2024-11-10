@@ -38,7 +38,6 @@
     "RunOnceActivity.OpenDjangoStructureViewOnStart": "true",
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "RunOnceActivity.pycharm.django.structure.promotion.once.per.project": "true",
-    "git-widget-placeholder": "master",
     "ignore.virus.scanning.warn.message": "true",
     "last_opened_file_path": "E:/Django/ChainChat/main/signals",
     "node.js.detected.package.eslint": "true",
@@ -103,7 +102,7 @@
       <option name="presentableId" value="Default" />
       <updated>1731143446000</updated>
       <workItem from="1731143485280" duration="49040000" />
-      <workItem from="1731240858816" duration="29103000" />
+      <workItem from="1731240858816" duration="29568000" />
     </task>
     <task id="LOCAL‎−۰۰۰۰۱" summary="init commit">
       <option name="closed" value="true" />
@@ -168,7 +167,14 @@
       <option name="presentableId" value="LOCAL‎−۰۰۰۰۹" />
       <updated>1731270704543</updated>
     </task>
-    <option name="localTasksCounter" value="10" />
+    <task id="LOCAL‎−۰۰۰۱۰" summary=".">
+      <option name="closed" value="true" />
+      <created>1731270795832</created>
+      <option name="number" value="LOCAL‎−۰۰۰۱۰" />
+      <option name="presentableId" value="LOCAL‎−۰۰۰۱۰" />
+      <updated>1731270795832</updated>
+    </task>
+    <option name="localTasksCounter" value="11" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
