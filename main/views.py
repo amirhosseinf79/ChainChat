@@ -8,10 +8,11 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from main.api.paginations.custom import CustomPagination
-from main.api.serializers.allMessages import AllMessageSerializer, ChatSerializer, GroupSerializer
+from main.api.serializers.allMessages import AllMessageSerializer, ChatSerializer, GroupSerializer, MessageSerializer, \
+    PhotoSerializer, VideoSerializer
 from main.api.serializers.chatMembers import ChatMemberSerializer
 from main.api.serializers.users import UserMoreInfoSerializer
-from main.models import Chat, Message, Photo, Video
+from main.models import Chat, Message, Photo, Video, MessageController
 
 
 class AuthRequiredView(APIView):
@@ -48,8 +49,9 @@ class CreateBaseView(AuthRequiredView):
     fields = None
 
     def post(self, request):
-        request.data.update({"user": request.user.id})
-        serializer = self.serializer_class(data=request.data)
+        raw_data = request.data.copy()
+        raw_data.update({"user": request.user.id})
+        serializer = self.serializer_class(data=raw_data)
 
         if serializer.is_valid():
             serializer.save()
@@ -147,72 +149,143 @@ class ChatMembersView(ChatViewBase):
 
 
 class ManageMessageBase(AuthRequiredView):
+    default_serializer = None
+    default_serializer_class = None
+    default_model = None
+    instance_obj = None
+    message_id = None
+    request = None
+
+    def message_type_incorrect(self):
+        self.base_data.update({
+            "details": ["message type is incorrect."],
+        })
+        return Response(self.base_data, status=status.HTTP_400_BAD_REQUEST)
+
+    def message_id_not_found(self):
+        self.base_data.update({
+            "details": ["Message id is not provided."],
+        })
+        return Response(self.base_data, status=status.HTTP_400_BAD_REQUEST)
+
+    def get_message_id(self, request):
+        self.message_id = request.get("message_id", -1)
+        return self.message_id
+
     def decide_model(self, request):
-        msg_type = request.data.pop("message_type", None)
+        raw_data = request.data.copy()
+        msg_type = raw_data.pop("type", None)
+        self.request = request
 
         if msg_type == "message":
-            default_model = Message
+            self.default_model = Message
         elif msg_type == "photo":
-            default_model = Photo
+            self.default_model = Photo
         elif msg_type == "video":
-            default_model = Video
+            self.default_model = Video
+
+    def decide_serializer(self, request, raw_data):
+        msg_type = raw_data.pop("type", None)
+        self.request = request
+
+        if msg_type == "message":
+            self.default_serializer = MessageSerializer
+            if self.message_id:
+                try:
+                    self.instance_obj = Message.objects.get(pk=self.message_id)
+                except Message.DoesNotExist:
+                    raise Http404
+
+        elif msg_type == "photo":
+            self.default_serializer = PhotoSerializer
+            if self.message_id:
+                try:
+                    self.instance_obj = Photo.objects.get(pk=self.message_id)
+                except Photo.DoesNotExist:
+                    raise Http404
+
+        elif msg_type == "video":
+            self.default_serializer = VideoSerializer
+            if self.message_id:
+                try:
+                    self.instance_obj = Video.objects.get(pk=self.message_id)
+                except Video.DoesNotExist:
+                    raise Http404
+
+        if self.default_serializer:
+            self.default_serializer_class = self.default_serializer(instance=self.instance_obj, data=raw_data)
+
+    def handle_serializer_response(self):
+        if not self.default_serializer_class:
+            return self.message_type_incorrect()
+
+        if self.default_serializer_class.is_valid():
+            self.default_serializer_class.save()
+            return Response(self.default_serializer_class.data, status=status.HTTP_200_OK)
         else:
-            default_model = Message
+            return Response(self.default_serializer_class.errors, status=status.HTTP_400_BAD_REQUEST)
 
-        return default_model
+    def handle_model_response(self, pk, func, st):
+        raw_data = self.request.data.copy()
+        raw_data.pop("type", None)
+        raw_data.update({"author_id": self.request.user.id, "chat_id": pk})
+        raw_data.update({"message_id": self.message_id}) if self.message_id else None
 
-    def handle_response(self, raw_data, func, status_code):
         try:
-            obj = func(**raw_data)
-            self.base_data.update({"success": True})
-            if obj:
-                self.base_data.update({"id": obj.id})
-            st = status_code
+            func(**raw_data)
         except TypeError:
-            self.base_data.update({"success": False, "details": "Unexpected value!"})
             st = status.HTTP_400_BAD_REQUEST
-
+            self.base_data.update({
+                "details": ["entered values is incorrect."],
+            })
         except ValidationError:
-            self.base_data.update({"success": False, "details": "Got wrong value!"})
             st = status.HTTP_400_BAD_REQUEST
+            self.base_data.update({
+                "details": ["entered values is incorrect."],
+            })
 
-        return Response(self.base_data, status=st)
-
-    def create_model(self, request, pk, create_func):
-        raw_data = request.data
-        raw_data.update({"author": request.user, "chat_id": pk})
-        return  self.handle_response(raw_data, create_func, status.HTTP_201_CREATED)
-
-    def update_model(self, request, pk, update_func):
-        raw_data = request.data
-        raw_data.update({"author": request.user, "chat_id": pk})
-        return self.handle_response(raw_data, update_func, status.HTTP_200_OK)
-
-    def delete_model(self, request, pk, delete_func):
-        raw_data = request.data
-        raw_data.update({"author": request.user, "chat_id": pk})
-        return self.handle_response(raw_data, delete_func, status.HTTP_204_NO_CONTENT)
+        return Response(self.base_data if self.base_data else None, status=st)
 
 
 class CreateMessageView(ManageMessageBase):
     def post(self, request, pk):
-        default_model = self.decide_model(request)
-        return self.create_model(request, pk, default_model.filtered_objects.create_message)
+        raw_data = request.data.copy()
+        raw_data.update({"author_id": request.user.id, "chat_id": pk})
+        self.decide_serializer(request, raw_data)
+        return self.handle_serializer_response()
 
 class EditMessageView(ManageMessageBase):
     def put(self, request, pk):
-        default_model = self.decide_model(request)
-        return self.update_model(request, pk, default_model.filtered_objects.edit_message)
+        raw_data = request.data.copy()
+        raw_data.update({"author_id": request.user.id, "chat_id": pk})
+        self.get_message_id(raw_data)
+        self.decide_serializer(request, raw_data)
+        return self.handle_serializer_response()
+
 
 class MessageReadView(ManageMessageBase):
     def post(self, request, pk):
-        default_model = self.decide_model(request)
-        return self.update_model(request, pk, default_model.filtered_objects.mark_seen)
+        self.decide_model(request)
+        if not self.default_model:
+            return self.message_type_incorrect()
+
+        self.get_message_id(request.data)
+
+        if self.message_id > 0:
+            self.message_id = self.default_model.objects.get(id=self.message_id).message_controller.id
+        else:
+            return self.message_id_not_found()
+
+        return self.handle_model_response(pk, MessageController.objects.mark_seen, status.HTTP_200_OK)
+
 
 class DeleteMessageView(ManageMessageBase):
     def post(self, request, pk):
-        default_model = self.decide_model(request)
-        return self.delete_model(request, pk, default_model.filtered_objects.delete_message)
+        self.decide_model(request)
+        if not self.default_model:
+            return self.message_type_incorrect()
+        return self.handle_model_response(pk, self.default_model.filtered_objects.delete_message,
+                                          status.HTTP_204_NO_CONTENT)
 
 
 class UserBaseView(AuthRequiredView):

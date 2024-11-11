@@ -53,7 +53,7 @@ class Video(admin.ModelAdmin):
 
 @admin.register(MessageController)
 class MsgController(admin.ModelAdmin):
-    list_display = ("chat", "message_id", "author", "created_at", "updated_at", "is_deleted", "delete_for_me")
+    list_display = ("id", "chat", "author", "created_at", "updated_at", "seen_at", "is_deleted", "delete_for_me")
     list_display_links = list_display
 
 

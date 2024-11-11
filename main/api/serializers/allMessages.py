@@ -4,7 +4,7 @@ from django.contrib.auth.models import User
 from rest_framework import serializers
 
 from main.api.serializers.users import UserSerializer
-from main.models import MessageController, Message, Photo, Chat, Video, Group, ChatMember
+from main.models import MessageController, Message, Photo, Chat, Video, Group, ChatMember, BlockedUser
 
 
 class GroupSerializer(serializers.ModelSerializer):
@@ -33,13 +33,22 @@ class ChatSerializer(serializers.ModelSerializer):
         start_with = attrs.get('start_with', None)
 
         if user and start_with and user != start_with:
-            user1 = User.objects.filter(id=user)
-            user2 = User.objects.filter(id=start_with)
-
-            if not user1.exists() or not user2.exists():
+            try:
+                user1 = User.objects.get(id=user)
+                user2 = User.objects.get(id=start_with)
+            except User.DoesNotExist:
                 raise serializers.ValidationError({"details": ["Invalid user provided."]})
+
+            is_blocked = BlockedUser.filtered_objects.filter(user_id=user2.id, blocked_by_id=user1.id)
+            is_blocked_by = BlockedUser.filtered_objects.filter(user_id=user1.id, blocked_by_id=user2.id)
+
+            if is_blocked_by.exists():
+                raise serializers.ValidationError({"details": ["Can't create chat with given user."]})
+            elif is_blocked.exists():
+                data = {"details": ["Can't create chat with given user. unblock user to create chat"]}
+                raise serializers.ValidationError(data)
         else:
-            raise serializers.ValidationError({"details", ["Invalid."]})
+            raise serializers.ValidationError({"details": ["You can't start chat with yourself."]})
 
         return attrs
 
@@ -68,7 +77,6 @@ class ChatSerializer(serializers.ModelSerializer):
         if is_group:
             title = instance.group.name
         else:
-
             second_user = ChatMember.objects.filter(chat=instance).exclude(member=user_obj).first()
             if second_user:
                 title = (second_user.member.first_name + " " + second_user.member.last_name).strip()
@@ -91,41 +99,10 @@ class ChatSerializer(serializers.ModelSerializer):
 class BaseMessageSerializer(serializers.Serializer):
     author = UserSerializer(read_only=True)
     chat = ChatSerializer(read_only=True, context=context)
-    user = serializers.IntegerField(write_only=True, required=True)
+    reply = serializers.SerializerMethodField(read_only=True)
+    reply_id = serializers.IntegerField(write_only=True)
+    author_id = serializers.IntegerField(write_only=True, required=True)
     chat_id = serializers.IntegerField(write_only=True, required=True)
-
-
-class MessageSerializer(BaseMessageSerializer, serializers.ModelSerializer):
-
-    class Meta:
-        model = Message
-        fields = ("id", "chat", "author", "text", "created_at", "updated_at", "edited_at", "seen_at")
-        read_only_fields = ("id", "created_at", "updated_at", "edited_at", "seen_at")
-
-
-class PhotoSerializer(BaseMessageSerializer, serializers.ModelSerializer):
-    class Meta:
-        model = Photo
-        fields = ("id", "chat", "author", "image", "caption", "created_at", "updated_at", "edited_at", "seen_at")
-        read_only_fields = ("id", "created_at", "updated_at", "edited_at", "seen_at")
-
-
-class VideoSerializer(BaseMessageSerializer, serializers.ModelSerializer):
-    class Meta:
-        model = Video
-        fields = ("id", "chat", "author", "video", "caption", "created_at", "updated_at", "edited_at", "seen_at")
-        read_only_fields = ("id", "created_at", "updated_at", "edited_at", "seen_at")
-
-
-class AllMessageSerializer(BaseMessageSerializer, serializers.ModelSerializer):
-    reply = serializers.SerializerMethodField()
-    message = MessageSerializer(read_only=True)
-    photo = PhotoSerializer(read_only=True)
-    video = VideoSerializer(read_only=True)
-
-    class Meta:
-        model = MessageController
-        fields = ("message", "photo", "video", "reply", )
 
     def get_reply(self, instance):
         reply_data = None
@@ -133,6 +110,79 @@ class AllMessageSerializer(BaseMessageSerializer, serializers.ModelSerializer):
             reply_data = {"reply": {"message_id": instance.reply.id, "preview": f"{instance.reply}"}}
 
         return reply_data
+
+    def validate(self, attrs):
+        attrs = super().validate(attrs)
+        author = attrs.get('author_id', None)
+        reply_id = attrs.get('reply_id', None)
+
+        if not author:
+            raise serializers.ValidationError({"details": ["Invalid user provided."]})
+
+        if reply_id:
+            try:
+                MessageController.objects.get(id=reply_id)
+            except MessageController.DoesNotExist:
+                raise serializers.ValidationError({"details": ["Can't find message with given id to reply."]})
+
+        try:
+            check_member = []
+            me = User.objects.get(id=author)
+            chat_obj = Chat.filtered_objects.get(id=attrs.get('chat_id'))
+            if not chat_obj.group:
+                chat_members = chat_obj.members.filter(is_deleted=False)
+                for member in chat_members:
+                    check_member.append(member.member.id)
+
+        except User.DoesNotExist:
+            raise serializers.ValidationError({"details": ["Invalid user provided."]})
+
+        except Chat.DoesNotExist:
+            raise serializers.ValidationError({"details": ["Invalid chat provided."]})
+
+        is_blocked = []
+        for member in check_member:
+            is_blocked_obj = BlockedUser.filtered_objects.filter(user_id=member, blocked_by_id=me.id)
+            is_blocked_by_obj = BlockedUser.filtered_objects.filter(user_id=me.id, blocked_by_id=member)
+            if is_blocked_obj.exists() or is_blocked_by_obj.exists():
+                is_blocked.append(member)
+
+        if is_blocked:
+            raise serializers.ValidationError({"details": ["Can't send message to given user."]})
+
+        return attrs
+
+
+class MessageSerializer(BaseMessageSerializer, serializers.ModelSerializer):
+
+    class Meta:
+        model = Message
+        fields = "__all__"
+        read_only_fields = ("id", "created_at", "updated_at", "edited_at", "seen_at")
+
+
+class PhotoSerializer(BaseMessageSerializer, serializers.ModelSerializer):
+    class Meta:
+        model = Photo
+        fields = "__all__"
+        read_only_fields = ("id", "created_at", "updated_at", "edited_at", "seen_at")
+
+
+class VideoSerializer(BaseMessageSerializer, serializers.ModelSerializer):
+    class Meta:
+        model = Video
+        fields = "__all__"
+        read_only_fields = ("id", "created_at", "updated_at", "edited_at", "seen_at")
+
+
+class AllMessageSerializer(BaseMessageSerializer, serializers.ModelSerializer):
+    message = MessageSerializer(read_only=True)
+    photo = PhotoSerializer(read_only=True)
+    video = VideoSerializer(read_only=True)
+
+    class Meta:
+        model = MessageController
+        fields = ("message", "photo", "video", "reply", )
 
     def to_representation(self, instance):
         data = super().to_representation(instance)

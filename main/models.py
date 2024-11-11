@@ -12,7 +12,23 @@ from rest_framework.authtoken.models import Token
 
 from ChainChat import settings
 from main.managers.managers import FilteredManager, GroupManager, ChatManager, FilteredChatManager, \
-    FilteredGroupManager, MessageManager, FilteredMessageManager
+    FilteredGroupManager, MessageManager, FilteredMessageManager, MessageControlManager, FilteredMessageControlManager
+
+
+class BaseModel(models.Model):
+    is_deleted = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    objects = models.Manager()
+    filtered_objects = FilteredManager()
+
+    def mark_delete(self):
+        self.is_deleted = True
+        self.save()
+
+    class Meta:
+        abstract = True
 
 
 class ExpiringToken(models.Model):
@@ -55,29 +71,14 @@ class Profile(models.Model):
     def unblock(self, block_by):
         try:
             obj = self.blocked_by_users.get(blocked_by_id=block_by)
-            obj.delete()
+            obj.is_deleted = False
+            obj.save()
             return obj
         except ObjectDoesNotExist:
             raise Http404
 
     def __str__(self):
         return self.user.username
-
-
-class BaseModel(models.Model):
-    is_deleted = models.BooleanField(default=False)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    objects = models.Manager()
-    filtered_objects = FilteredManager()
-
-    def delete(self, *args, **kwargs):
-        self.is_deleted = True
-        self.save()
-
-    class Meta:
-        abstract = True
 
 
 class BlockedUser(BaseModel):
@@ -137,8 +138,7 @@ class Chat(BaseModel):
         try:
             obj = ChatMember.objects.get(member=user, chat=self)
             if not obj.is_deleted:
-                obj.is_deleted = True
-                obj.save()
+                obj.mark_delete()
                 return True, "User left."
             else:
                 return False, "User already left."
@@ -150,7 +150,7 @@ class Chat(BaseModel):
                    Q(member__first_name__contains=query) | \
                    Q(member__last_name__contains=query)
 
-        return self.members.filter(u_filter).distinct()
+        return self.members.filter(u_filter, is_deleted=False).distinct()
 
     def get_messages(self, user, msg_filter="", date_filter=None):
         if msg_filter:
@@ -171,7 +171,7 @@ class Chat(BaseModel):
         hide_for_me = Q(delete_for_me=False) | ~Q(author=user)
 
         return self.chat_messagecontrollers \
-                .filter(chat__members__member=user, ) \
+                .filter(chat__members__member=user, is_deleted=False) \
                 .filter(m_filter).filter(d_filter).filter(hide_for_me).distinct()
 
     def delete_chat(self, user):
@@ -180,8 +180,7 @@ class Chat(BaseModel):
         except Chat.DoesNotExist:
             return False
 
-        member_obj.is_deleted = True
-        member_obj.save()
+        member_obj.mark_delete()
         return True
 
     class Meta:
@@ -245,7 +244,7 @@ class MessageController(BaseMessage):
     video = models.OneToOneField(
         Video,
         on_delete=models.CASCADE,
-        related_name='video_messages',
+        related_name='video_controller',
         null=True,
         blank=True,
     )
@@ -253,7 +252,7 @@ class MessageController(BaseMessage):
     photo = models.OneToOneField(
         Photo,
         on_delete=models.CASCADE,
-        related_name='photo_messages',
+        related_name='photo_controller',
         null=True,
         blank=True,
     )
@@ -261,10 +260,13 @@ class MessageController(BaseMessage):
     message = models.OneToOneField(
         Message,
         on_delete=models.CASCADE,
-        related_name='messages',
+        related_name='message_controller',
         null=True,
         blank=True,
     )
+
+    objects = MessageControlManager()
+    filtered_objects = FilteredMessageControlManager()
 
     def __str__(self):
         value = ""

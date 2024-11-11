@@ -1,9 +1,7 @@
 from django.urls import path
 
 from main.api.genericViews.auth import AuthLoginView, AuthCreateUserView
-from main.views import ChatMessagesView, ChatMembersView, ChatListView, ChatDetailsView, CreateGroup, ChatCreateView, \
-    JoinChatView, LeaveChatView, CreateMessageView, EditMessageView, DeleteMessageView, MessageReadView, \
-    GetUsersListView, GetUserDetailsView, BlockUserView, UnblockUserView
+from main.views import *
 
 urlpatterns = [
     path("auth/login", AuthLoginView.as_view(), name="login"),

@@ -67,11 +67,6 @@ class FilteredGroupManager(GroupManager):
 
 
 class MessageManager(models.Manager):
-    def mark_seen(self, chat_id, author, message_id):
-        self.filter(chat_id=chat_id, seen_at__isnull=True, id__lte=message_id)\
-            .exclude(author=author).update(seen_at=timezone.now())
-        return None
-
     def create_message(self, chat_id, author, **kwargs):
         return self.create(chat_id=chat_id, author=author, **kwargs)
 
@@ -79,21 +74,48 @@ class MessageManager(models.Manager):
         self.filter(id=message_id).update(author=author, chat_id=chat_id, **kwargs)
         return None
 
-    def delete_message(self, message_id, chat_id, author, for_everyone=False):
+    def delete_message(self, message_id, chat_id, author_id, for_everyone=False):
         try:
-            obj = self.get(chat_id=chat_id, author=author, id=message_id)
+            obj = self.get(chat_id=chat_id, author_id=author_id, id=message_id)
         except ObjectDoesNotExist:
             raise Http404
 
         if for_everyone:
-            obj.is_deleted = True
+            obj.mark_delete()
         else:
             obj.delete_for_me = True
+            obj.save()
 
-        obj.save()
         return None
 
 
 class FilteredMessageManager(MessageManager):
+    def get_queryset(self):
+        return super().get_queryset().filter(is_deleted=False)
+
+
+class MessageControlManager(MessageManager):
+    def mark_seen(self, chat_id, author_id, message_id):
+        unread_messages = self.filter(chat_id=chat_id, seen_at__isnull=True, id__lte=message_id).exclude(author_id=author_id)
+
+        for message in unread_messages:
+            default_model = None
+
+            if message.video:
+                default_model = message.video
+            elif message.photo:
+                default_model = message.photo
+            elif message.message:
+                default_model = message.message
+
+            if not default_model:
+                return None
+
+            default_model.seen_at = timezone.now()
+            default_model.save()
+
+        return None
+
+class FilteredMessageControlManager(MessageManager):
     def get_queryset(self):
         return super().get_queryset().filter(is_deleted=False)
