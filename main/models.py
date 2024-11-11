@@ -1,16 +1,64 @@
+from datetime import timedelta
+
 from django.contrib.auth.models import User
+from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
 from django.db.models import Q
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+from django.http import Http404
+from django.utils import timezone
+from rest_framework.authtoken.models import Token
 
+from ChainChat import settings
 from main.managers.managers import FilteredManager, GroupManager, ChatManager, FilteredChatManager, \
     FilteredGroupManager, MessageManager, FilteredMessageManager
 
 
+class ExpiringToken(models.Model):
+    token = models.OneToOneField(Token, on_delete=models.CASCADE, related_name='options')
+    expiration_date = models.DateTimeField(null=True, blank=True)
+
+    def is_expired(self):
+        return self.expiration_date < timezone.now()
+
+    def refresh(self):
+        self.save()
+
+    def save(self, *args, **kwargs):
+        if not self.expiration_date and settings.TOKEN_EXPIRE_TIME:
+            self.expiration_date = timezone.now() + timedelta(minutes=settings.TOKEN_EXPIRE_TIME)
+        return super().save(*args, **kwargs)
+
+
 class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
-    phone_number = models.CharField(max_length=12, unique=True, blank=True, null=True)
+    phone_number = models.CharField(max_length=10, unique=True, blank=True, null=True)
+
+    def block_list(self):
+        obj = self.blocked_users.filter(is_deleted=False).distinct()
+        return obj
+
+    def is_blocked(self, block_by):
+        return self.blocked_by_users.filter(blocked_by_id=block_by, is_deleted=False).exists()
+
+    def block(self, block_by):
+        obj = self.blocked_by_users.filter(blocked_by_id=block_by)
+
+        if not obj:
+            obj = self.blocked_by_users.create(blocked_by_id=block_by)
+        else:
+            obj.update(blocked_by_id=block_by, is_deleted=False)
+
+        return obj
+
+    def unblock(self, block_by):
+        try:
+            obj = self.blocked_by_users.get(blocked_by_id=block_by)
+            obj.delete()
+            return obj
+        except ObjectDoesNotExist:
+            raise Http404
 
     def __str__(self):
         return self.user.username
@@ -30,6 +78,14 @@ class BaseModel(models.Model):
 
     class Meta:
         abstract = True
+
+
+class BlockedUser(BaseModel):
+    blocked_by = models.ForeignKey(Profile, on_delete=models.CASCADE, related_name='blocked_users')
+    user = models.ForeignKey(Profile, on_delete=models.CASCADE, related_name='blocked_by_users')
+
+    class Meta:
+        unique_together = (('user', 'blocked_by'),)
 
 
 class Group(BaseModel):
@@ -152,6 +208,7 @@ class BaseMessage(BaseModel):
     edited_at = models.DateTimeField(null=True, blank=True)
     seen_at = models.DateTimeField(null=True, blank=True)
     delete_for_me = models.BooleanField(default=False)
+    reply = models.ForeignKey("MessageController", null=True, blank=True, on_delete=models.CASCADE, related_name='reply_%(class)ss')
 
     objects = MessageManager()
     filtered_objects = FilteredMessageManager()
@@ -209,6 +266,23 @@ class MessageController(BaseMessage):
         blank=True,
     )
 
+    def __str__(self):
+        value = ""
+        if self.video:
+            value = "video"
+        elif self.photo:
+            value = "photo"
+        elif self.message:
+            value = self.message.text
+
+        return value
+
+
+# define Expire token date obj
+@receiver(post_save, sender=Token)
+def create_token(sender, instance, **kwargs):
+    ExpiringToken.objects.update_or_create(token=instance)
+
 
 # Auto create profile
 @receiver(post_save, sender=User)
@@ -233,6 +307,7 @@ def update_controller(obj, instance):
     obj.delete_for_me = instance.delete_for_me
     obj.seen_at = instance.seen_at
     obj.edited_at = instance.edited_at
+    obj.reply = instance.reply
     instance.chat.save()
     obj.save()
 

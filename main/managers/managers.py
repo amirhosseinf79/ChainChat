@@ -12,28 +12,28 @@ class FilteredManager(models.Manager):
 
 
 class ChatManager(models.Manager):
-    def create_private_chat(self, me, user):
-        if me and user and me != user:
-            user1 = User.objects.filter(id=me)
-            user2 = User.objects.filter(id=user)
+    def create_private_chat(self, user, start_with):
+        if user and start_with and user != start_with:
+            user1 = User.objects.filter(id=user)
+            user2 = User.objects.filter(id=start_with)
 
             if user1.count() > 0 and user2.count() > 0:
-                chat_ins = self.filter(members__member_id=me).filter(members__member_id=user) \
+                chat_ins = self.filter(members__member_id=user).filter(members__member_id=start_with) \
                     .filter(group__isnull=True).distinct()
 
                 if chat_ins.exists():
                     chat = chat_ins.first()
-                    obj, created = chat.members.get_or_create(member_id=me)
+                    obj, created = chat.members.get_or_create(member_id=user)
                     obj.is_deleted = False
                     obj.save()
 
-                    obj, created = chat.members.get_or_create(member_id=user)
+                    obj, created = chat.members.get_or_create(member_id=start_with)
                     obj.is_deleted = False
                     obj.save()
                 else:
                     chat = self.create()
-                    chat.members.create(member_id=me)
                     chat.members.create(member_id=user)
+                    chat.members.create(member_id=start_with)
 
                 return chat
 
@@ -56,8 +56,8 @@ class FilteredChatManager(ChatManager):
 class GroupManager(models.Manager):
     def create_group(self, name, user):
         obj = self.create(name=name)
-        obj.admins.create(admin_id=user.id)
-        obj.chat.members.create(member_id=user.id)
+        obj.admins.create(admin_id=user)
+        obj.chat.members.create(member_id=user)
         return obj
 
 

@@ -3,6 +3,12 @@ from django.contrib import admin
 from main.models import *
 
 
+@admin.register(ExpiringToken)
+class ExpiringTokenAdmin(admin.ModelAdmin):
+    list_display = ("id", "token", "expiration_date")
+    list_display_links = list_display
+
+
 @admin.register(Chat)
 class Chat(admin.ModelAdmin):
     list_display = ["id", "group", "created_at", "updated_at", "is_deleted"]
@@ -39,15 +45,6 @@ class Photo(admin.ModelAdmin):
     list_display_links = list_display
 
 
-# Register your models here.
-@admin.register(Profile)
-class Profile(admin.ModelAdmin):
-    list_display = ["user", "phone_number"]
-    list_filter = ["user__is_staff", "user__is_active"]
-    search_fields = ["phone_number", "user__username"]
-    list_display_links = list_display
-
-
 @admin.register(Video)
 class Video(admin.ModelAdmin):
     list_display = ("chat", "author", "created_at", "updated_at", "is_deleted", "delete_for_me")
@@ -57,4 +54,20 @@ class Video(admin.ModelAdmin):
 @admin.register(MessageController)
 class MsgController(admin.ModelAdmin):
     list_display = ("chat", "message_id", "author", "created_at", "updated_at", "is_deleted", "delete_for_me")
+    list_display_links = list_display
+
+
+# Register your models here.
+@admin.register(Profile)
+class Profile(admin.ModelAdmin):
+    list_display = ["user", "phone_number"]
+    list_filter = ["user__is_staff", "user__is_active"]
+    search_fields = ["phone_number", "user__username"]
+    list_display_links = list_display
+
+
+@admin.register(BlockedUser)
+class Profile(admin.ModelAdmin):
+    list_display = ["id", "blocked_by", "user", "created_at", "updated_at", "is_deleted"]
+    search_fields = ["blocked_by__user__username", "user__user__username"]
     list_display_links = list_display
