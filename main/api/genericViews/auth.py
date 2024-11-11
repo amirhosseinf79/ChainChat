@@ -1,12 +1,11 @@
 from rest_framework import status
 from rest_framework.authtoken.models import Token
 from rest_framework.authtoken.views import ObtainAuthToken
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from ChainChat import settings
 from main.api.serializers.users import CreateUserSerializer
-from main.models import ExpiringToken
 
 
 class AuthLoginView(ObtainAuthToken):
@@ -30,3 +29,8 @@ class AuthCreateUserView(APIView):
             return Response({'message': self.success_msg}, status=status.HTTP_201_CREATED)
         else:
             return Response(user.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class AuthRequiredView(APIView):
+    permission_classes = (IsAuthenticated,)
+    base_data = {}
