@@ -174,7 +174,6 @@ class BlockUserView(UserBaseView):
     def post(self, request, pk):
         selected_user = self.get_query(pk)
         selected_user.profile.block(request.user.id)
-
         selected_user = self.get_query(pk)
         serializer = self.serializer_class(selected_user, context={"user": request.user})
         return Response(serializer.data)
