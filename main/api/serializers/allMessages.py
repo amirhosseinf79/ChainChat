@@ -91,6 +91,7 @@ class ChatSerializer(serializers.ModelSerializer):
             "updated_at": instance.updated_at,
             "is_joined": instance.members.filter(member=user_obj).count() > 0,
             "members": instance.members.all().count(),
+            "unread_messages": instance.unread_messages_count(user_obj.id),
             "last_message": self.get_last_message(instance),
         }
         return data

@@ -35,6 +35,8 @@ class ExpiringToken(models.Model):
 class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
     phone_number = models.CharField(max_length=10, unique=True, blank=True, null=True)
+    is_online = models.BooleanField(default=False)
+    last_online = models.DateTimeField(auto_now=True)
 
     def block_list(self):
         obj = self.blocked_users.filter(is_deleted=False).distinct()
@@ -104,6 +106,10 @@ class Chat(BaseModel):
 
     objects = ChatManager()
     filtered_objects = FilteredChatManager()
+
+    def unread_messages_count(self, user_id):
+        return self.chat_messagecontrollers.filter(is_deleted=False) \
+            .exclude(seen_users__user_id=user_id).exclude(author_id=user_id).count()
 
     def join_chat(self, user):
         if self.group:

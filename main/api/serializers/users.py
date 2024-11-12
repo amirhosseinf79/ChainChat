@@ -16,7 +16,10 @@ class UserMoreInfoSerializer(serializers.ModelSerializer):
         user = self.context.get('user', None)
         if user:
             data.update({
+                "last_online": instance.profile.last_online,
+                "is_online": instance.profile.is_online,
                 "is_blocked": instance.profile.is_blocked(user.id),
+                "is_blocked_you": instance.profile.blocked_users.filter(user_id=user.id, is_deleted=False).exists(),
             })
         return data
 
@@ -28,7 +31,9 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class CreateUserSerializer(serializers.ModelSerializer):
-    phone_number = serializers.CharField(max_length=10, required=False)
+    first_name = serializers.CharField(max_length=255, required=True)
+    email = serializers.EmailField(required=True)
+    phone_number = serializers.CharField(max_length=10, required=True)
     password = serializers.CharField(write_only=True, required=True)
 
     class Meta:

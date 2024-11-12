@@ -5,7 +5,7 @@ from main.views import *
 
 urlpatterns = [
     path("auth/login", AuthLoginView.as_view(), name="login"),
-    path("", AuthCreateUserView.as_view(), name="create-account"),
+    path("auth/createAccount", AuthCreateUserView.as_view(), name="create-account"),
     path("group/create", CreateGroup.as_view(), name="create-group"),
     path("chat/create", ChatCreateView.as_view(), name="create-chat"),
     path("chat/getList", ChatListView.as_view(), name="get-all-chats"),
