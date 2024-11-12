@@ -3,7 +3,6 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
 from django.db.models import Q
 from django.http import Http404
-from django.utils import timezone
 
 
 class FilteredManager(models.Manager):
@@ -95,24 +94,12 @@ class FilteredMessageManager(MessageManager):
 
 
 class MessageControlManager(MessageManager):
-    def mark_seen(self, chat_id, author_id, message_id):
-        unread_messages = self.filter(chat_id=chat_id, seen_at__isnull=True, id__lte=message_id).exclude(author_id=author_id)
+    def mark_seen(self, chat_id, author_id, user_id, message_id):
+        unread_messages = self.filter(chat_id=chat_id, id__lte=message_id) \
+            .exclude(author_id=author_id, seen_users__user_id=user_id)
 
         for message in unread_messages:
-            default_model = None
-
-            if message.video:
-                default_model = message.video
-            elif message.photo:
-                default_model = message.photo
-            elif message.message:
-                default_model = message.message
-
-            if not default_model:
-                return None
-
-            default_model.seen_at = timezone.now()
-            default_model.save()
+            message.seen_users.update_or_create(user_id=user_id)
 
         return None
 

@@ -1,3 +1,4 @@
+from django.core.exceptions import ObjectDoesNotExist
 from django.http import Http404
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
@@ -143,11 +144,24 @@ class MessageReadView(ManageMessageBase):
         self.get_message_id(request.data)
 
         if self.message_id > 0:
-            self.message_id = self.default_model.objects.get(id=self.message_id).message_controller.id
+            try:
+                model_obj = self.default_model.filtered_objects.get(id=self.message_id)
+                try:
+                    self.message_id = model_obj.message_controller.id
+                except AttributeError:
+                    try:
+                        self.message_id = model_obj.video_controller.id
+                    except AttributeError:
+                        self.message_id = model_obj.photo_controller.id
+            except ObjectDoesNotExist:
+                return self.message_id_not_found()
         else:
             return self.message_id_not_found()
 
-        return self.handle_model_response(pk, MessageController.objects.mark_seen, status.HTTP_200_OK)
+        raw_data = request.data.copy()
+        raw_data.update({"user_id": request.user.id})
+
+        return self.handle_model_response(pk, raw_data, MessageController.objects.mark_seen, status.HTTP_200_OK)
 
 
 class DeleteMessageView(ManageMessageBase):
@@ -155,7 +169,7 @@ class DeleteMessageView(ManageMessageBase):
         self.decide_model(request)
         if not self.default_model:
             return self.message_type_incorrect()
-        return self.handle_model_response(pk, self.default_model.filtered_objects.delete_message,
+        return self.handle_model_response(pk, request, self.default_model.filtered_objects.delete_message,
                                           status.HTTP_204_NO_CONTENT)
 
 class GetUsersListView(UserBaseView):

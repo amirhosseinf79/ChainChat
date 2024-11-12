@@ -4,7 +4,7 @@ from django.contrib.auth.models import User
 from rest_framework import serializers
 
 from main.api.serializers.users import UserSerializer
-from main.models import MessageController, Message, Photo, Chat, Video, Group, ChatMember, BlockedUser
+from main.models import MessageController, Message, Photo, Chat, Video, Group, ChatMember, BlockedUser, SeenUser
 
 
 class GroupSerializer(serializers.ModelSerializer):
@@ -107,7 +107,7 @@ class BaseMessageSerializer(serializers.Serializer):
     def get_reply(self, instance):
         reply_data = None
         if instance.reply:
-            reply_data = {"reply": {"message_id": instance.reply.id, "preview": f"{instance.reply}"}}
+            reply_data = {"message_id": instance.reply.id, "preview": f"{instance.reply}"}
 
         return reply_data
 
@@ -175,14 +175,36 @@ class VideoSerializer(BaseMessageSerializer, serializers.ModelSerializer):
         read_only_fields = ("id", "created_at", "updated_at", "edited_at", "seen_at")
 
 
+class SeenUserSerializer(BaseMessageSerializer, serializers.ModelSerializer):
+    user = UserSerializer(read_only=True)
+
+    class Meta:
+        model = SeenUser
+        fields = ("user", )
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        raw_data = {}
+        for k, v in data.items():
+            raw_data.update(v)
+        return raw_data
+
+
 class AllMessageSerializer(BaseMessageSerializer, serializers.ModelSerializer):
     message = MessageSerializer(read_only=True)
     photo = PhotoSerializer(read_only=True)
     video = VideoSerializer(read_only=True)
+    seen_by = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = MessageController
-        fields = ("message", "photo", "video", "reply", )
+        fields = ("message", "photo", "video", "reply", "seen_by")
+
+    def get_seen_by(self, instance):
+        seen_users = instance.seen_users.filter()
+        data = SeenUserSerializer(seen_users, many=True).data
+        return data
+
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
@@ -190,11 +212,11 @@ class AllMessageSerializer(BaseMessageSerializer, serializers.ModelSerializer):
             "id": 0,
         }
         for k, v in data.items():
-            if v and k != "reply":
+            if v and (k == "video" or k == "photo" or k == "message"):
                 new_data.update({f"type": k})
                 new_data.update(v)
 
-            elif v and k == "reply":
-                new_data.update(v)
+            else:
+                new_data.update({k: v})
 
         return new_data

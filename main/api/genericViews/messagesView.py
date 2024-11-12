@@ -24,7 +24,7 @@ class ManageMessageBase(AuthRequiredView):
 
     def message_id_not_found(self):
         self.base_data.update({
-            "details": ["Message id is not provided."],
+            "details": ["Message id is not correct."],
         })
         return Response(self.base_data, status=status.HTTP_400_BAD_REQUEST)
 
@@ -77,8 +77,7 @@ class ManageMessageBase(AuthRequiredView):
         else:
             return Response(self.default_serializer_class.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    def handle_model_response(self, pk, func, st):
-        raw_data = self.request.data.copy()
+    def handle_model_response(self, pk, raw_data, func, st):
         raw_data.pop("type", None)
         raw_data.update({"author_id": self.request.user.id, "chat_id": pk})
         raw_data.update({"message_id": self.message_id}) if self.message_id else None

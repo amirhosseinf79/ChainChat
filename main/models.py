@@ -11,24 +11,9 @@ from django.utils import timezone
 from rest_framework.authtoken.models import Token
 
 from ChainChat import settings
-from main.managers.managers import FilteredManager, GroupManager, ChatManager, FilteredChatManager, \
-    FilteredGroupManager, MessageManager, FilteredMessageManager, MessageControlManager, FilteredMessageControlManager
-
-
-class BaseModel(models.Model):
-    is_deleted = models.BooleanField(default=False)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    objects = models.Manager()
-    filtered_objects = FilteredManager()
-
-    def mark_delete(self):
-        self.is_deleted = True
-        self.save()
-
-    class Meta:
-        abstract = True
+from main.managers.managers import GroupManager, ChatManager, FilteredChatManager, \
+    FilteredGroupManager, MessageControlManager, FilteredMessageControlManager
+from main.managers.modelGenerics.baseModels import BaseModel, BaseMessage
 
 
 class ExpiringToken(models.Model):
@@ -201,22 +186,6 @@ class ChatMember(BaseModel):
         return f"{self.id}"
 
 
-class BaseMessage(BaseModel):
-    chat = models.ForeignKey(Chat, null=True, blank=True, on_delete=models.CASCADE, related_name='chat_%(class)ss')
-    author = models.ForeignKey(User, null=True, blank=True, on_delete=models.CASCADE, related_name='user_%(class)ss')
-    edited_at = models.DateTimeField(null=True, blank=True)
-    seen_at = models.DateTimeField(null=True, blank=True)
-    delete_for_me = models.BooleanField(default=False)
-    reply = models.ForeignKey("MessageController", null=True, blank=True, on_delete=models.CASCADE, related_name='reply_%(class)ss')
-
-    objects = MessageManager()
-    filtered_objects = FilteredMessageManager()
-
-    class Meta:
-        abstract = True
-        ordering = ['-created_at']
-
-
 class Message(BaseMessage):
     text = models.TextField()
 
@@ -280,6 +249,17 @@ class MessageController(BaseMessage):
         return value
 
 
+class SeenUser(BaseModel):
+    message = models.ForeignKey(MessageController, on_delete=models.CASCADE, related_name='seen_users')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='seen_message')
+
+    class Meta:
+        unique_together = ("message", "user", )
+
+    def __str__(self):
+        return self.user.username
+
+
 # define Expire token date obj
 @receiver(post_save, sender=Token)
 def create_token(sender, instance, **kwargs):
@@ -307,7 +287,6 @@ def update_controller(obj, instance):
     obj.chat = instance.chat
     obj.author = instance.author
     obj.delete_for_me = instance.delete_for_me
-    obj.seen_at = instance.seen_at
     obj.edited_at = instance.edited_at
     obj.reply = instance.reply
     instance.chat.save()
