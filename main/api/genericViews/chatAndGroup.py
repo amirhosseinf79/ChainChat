@@ -1,9 +1,27 @@
 from django.db.models import Q
 from django.http import Http404
+from rest_framework import status
+from rest_framework.response import Response
 
 from main.api.genericViews.auth import AuthRequiredView
 from main.api.paginations.custom import CustomPagination
 from main.models import Chat
+
+
+class CreateBaseView(AuthRequiredView):
+    serializer_class = None
+    fields = None
+
+    def post(self, request):
+        raw_data = request.data.copy()
+        raw_data.update({"user": request.user.id})
+        serializer = self.serializer_class(data=raw_data)
+
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class ChatViewBase(AuthRequiredView):

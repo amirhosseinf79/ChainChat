@@ -5,23 +5,43 @@ from rest_framework.exceptions import ValidationError
 from main.models import Profile
 
 
-class UserMoreInfoSerializer(serializers.ModelSerializer):
+class BaserUserSerializer(serializers.ModelSerializer):
+    is_online = serializers.SerializerMethodField()
+    last_online = serializers.SerializerMethodField()
+    phone_number = serializers.SerializerMethodField()
+
+    def get_is_online(self, obj):
+        return obj.profile.is_online
+
+    def get_last_online(self, obj):
+        return obj.profile.last_online
+
+    def get_phone_number(self, obj):
+        return obj.profile.phone_number
+
+
+class AuthUserSerializer(BaserUserSerializer):
     class Meta:
         model = User
-        fields = ("id", "username", "first_name", "last_name")
+        fields = ("id", "username", "first_name", "last_name", "email", "phone_number", "is_online", "last_online", )
 
 
-    def to_representation(self, instance):
-        data = super().to_representation(instance)
+class UserMoreInfoSerializer(BaserUserSerializer):
+    is_blocked = serializers.SerializerMethodField()
+    is_blocked_you = serializers.SerializerMethodField()
+
+    class Meta:
+        model = User
+        fields = ("id", "username", "first_name", "last_name", "is_online",
+                  "last_online", "is_blocked", "is_blocked_you")
+
+    def get_is_blocked(self, instance):
         user = self.context.get('user', None)
-        if user:
-            data.update({
-                "last_online": instance.profile.last_online,
-                "is_online": instance.profile.is_online,
-                "is_blocked": instance.profile.is_blocked(user.id),
-                "is_blocked_you": instance.profile.blocked_users.filter(user_id=user.id, is_deleted=False).exists(),
-            })
-        return data
+        return instance.profile.is_blocked(user.id)
+
+    def get_is_blocked_you(self, instance):
+        user = self.context.get('user', None)
+        return instance.profile.blocked_users.filter(user_id=user.id, is_deleted=False).exists()
 
 
 class UserSerializer(serializers.ModelSerializer):

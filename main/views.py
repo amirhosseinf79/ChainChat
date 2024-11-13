@@ -3,32 +3,23 @@ from django.http import Http404
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from rest_framework.views import APIView
 
 from main.api.genericViews.auth import AuthRequiredView
-from main.api.genericViews.chatAndGroup import ChatViewBase
+from main.api.genericViews.chatAndGroup import ChatViewBase, CreateBaseView
 from main.api.genericViews.messagesView import ManageMessageBase
 from main.api.genericViews.userVeiw import UserBaseView
 from main.api.serializers.chatMembers import ChatMemberSerializer
+from main.api.serializers.users import AuthUserSerializer
 from main.models import Chat, MessageController
 from main.api.serializers.allMessages import (AllMessageSerializer,
                                               ChatSerializer,
                                               GroupSerializer)
 
+class GetMyInfo(AuthRequiredView):
+    def get(self, request):
+        return Response(AuthUserSerializer(request.user).data)
 
-class CreateBaseView(AuthRequiredView):
-    serializer_class = None
-    fields = None
-
-    def post(self, request):
-        raw_data = request.data.copy()
-        raw_data.update({"user": request.user.id})
-        serializer = self.serializer_class(data=raw_data)
-
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        else:
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 # Create your views here.
 class CreateGroup(CreateBaseView):

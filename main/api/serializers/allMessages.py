@@ -21,10 +21,60 @@ class GroupSerializer(serializers.ModelSerializer):
 class ChatSerializer(serializers.ModelSerializer):
     user = serializers.IntegerField(write_only=True, required=True)
     start_with = serializers.IntegerField(write_only=True, required=True)
+    is_group = serializers.SerializerMethodField(read_only=True)
+    title = serializers.SerializerMethodField(read_only=True)
+    is_joined = serializers.SerializerMethodField(read_only=True)
+    members = serializers.SerializerMethodField(read_only=True)
+    unread_messages = serializers.SerializerMethodField(read_only=True)
+    last_message = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = Chat
-        fields = ("user", "start_with")
+        fields = ("user", "start_with", "is_group", "title", "is_joined",
+                  "members", "unread_messages", "last_message")
+
+    def get_is_group(self, instance):
+        return bool(instance.group)
+
+    def get_title(self, instance):
+        is_group = bool(instance.group)
+        user_obj = self.context.get("user", None)
+
+        if is_group:
+            title = instance.group.name
+        else:
+            second_user = ChatMember.objects.filter(chat=instance).exclude(member=user_obj).first()
+            if second_user:
+                title = (second_user.member.first_name + " " + second_user.member.last_name).strip()
+            else:
+                title = (user_obj.first_name + " " + user_obj.last_name).strip()
+
+        return title
+
+    def get_is_joined(self, instance):
+        user_obj = self.context.get("user", None)
+        return instance.members.filter(member=user_obj).exists()
+
+    def get_members(self, instance):
+        return instance.members.filter(is_deleted=False).count()
+
+    def get_unread_messages(self, instance):
+        user_obj = self.context.get("user", None)
+        return instance.unread_messages_count(user_obj.id)
+
+    def get_last_message(self, instance):
+        all_messages = instance.get_messages(self.context.get('user', None))
+        message_obj = all_messages.first() if all_messages.count() > 0 else None
+        data = None
+
+        if message_obj:
+            data = {
+                "author": UserSerializer(message_obj.author).data,
+                "preview": f"{message_obj}",
+                "created_at": message_obj.created_at,
+            }
+
+        return data
 
     def validate(self, attrs):
         attrs = super().validate(attrs)
@@ -55,46 +105,6 @@ class ChatSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         obj = self.Meta.model.objects.create_private_chat(**validated_data)
         return obj
-
-    def get_last_message(self, instance):
-        all_messages = instance.get_messages(self.context.get('user', None))
-        message_obj = all_messages.first() if all_messages.count() > 0 else None
-        data = None
-
-        if message_obj:
-            data = {
-                "author": UserSerializer(message_obj.author).data,
-                "preview": f"{message_obj}",
-                "created_at": message_obj.created_at,
-            }
-
-        return data
-
-    def to_representation(self, instance):
-        is_group = bool(instance.group)
-        user_obj = self.context.get("user", None)
-
-        if is_group:
-            title = instance.group.name
-        else:
-            second_user = ChatMember.objects.filter(chat=instance).exclude(member=user_obj).first()
-            if second_user:
-                title = (second_user.member.first_name + " " + second_user.member.last_name).strip()
-            else:
-                title = (user_obj.first_name + " " + user_obj.last_name).strip()
-
-        data = {
-            "chat_id": instance.id,
-            "is_group": is_group,
-            "title": title,
-            "created_at": instance.created_at,
-            "updated_at": instance.updated_at,
-            "is_joined": instance.members.filter(member=user_obj).count() > 0,
-            "members": instance.members.all().count(),
-            "unread_messages": instance.unread_messages_count(user_obj.id),
-            "last_message": self.get_last_message(instance),
-        }
-        return data
 
 
 class BaseMessageSerializer(serializers.Serializer):
@@ -159,21 +169,21 @@ class MessageSerializer(BaseMessageSerializer, serializers.ModelSerializer):
     class Meta:
         model = Message
         fields = "__all__"
-        read_only_fields = ("id", "created_at", "updated_at", "edited_at", "seen_at")
+        read_only_fields = ("id", "created_at", "updated_at", "edited_at")
 
 
 class PhotoSerializer(BaseMessageSerializer, serializers.ModelSerializer):
     class Meta:
         model = Photo
         fields = "__all__"
-        read_only_fields = ("id", "created_at", "updated_at", "edited_at", "seen_at")
+        read_only_fields = ("id", "created_at", "updated_at", "edited_at")
 
 
 class VideoSerializer(BaseMessageSerializer, serializers.ModelSerializer):
     class Meta:
         model = Video
         fields = "__all__"
-        read_only_fields = ("id", "created_at", "updated_at", "edited_at", "seen_at")
+        read_only_fields = ("id", "created_at", "updated_at", "edited_at")
 
 
 class SeenUserSerializer(BaseMessageSerializer, serializers.ModelSerializer):

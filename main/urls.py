@@ -4,6 +4,7 @@ from main.api.genericViews.auth import AuthLoginView, AuthCreateUserView
 from main.views import *
 
 urlpatterns = [
+    path("auth/info", GetMyInfo.as_view(), name="auth-info"),
     path("auth/login", AuthLoginView.as_view(), name="login"),
     path("auth/createAccount", AuthCreateUserView.as_view(), name="create-account"),
     path("group/create", CreateGroup.as_view(), name="create-group"),
