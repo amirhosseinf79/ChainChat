@@ -30,7 +30,7 @@ class ChatSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Chat
-        fields = ("user", "start_with", "is_group", "title", "is_joined",
+        fields = ("user", "start_with", "is_group", "is_joined","title",
                   "members", "unread_messages", "last_message")
 
     def get_is_group(self, instance):

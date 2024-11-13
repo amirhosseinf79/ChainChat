@@ -5,7 +5,7 @@ from rest_framework.exceptions import ValidationError
 from main.models import Profile
 
 
-class BaserUserSerializer(serializers.ModelSerializer):
+class BaseUserSerializer(serializers.ModelSerializer):
     is_online = serializers.SerializerMethodField()
     last_online = serializers.SerializerMethodField()
     phone_number = serializers.SerializerMethodField()
@@ -20,13 +20,13 @@ class BaserUserSerializer(serializers.ModelSerializer):
         return obj.profile.phone_number
 
 
-class AuthUserSerializer(BaserUserSerializer):
+class AuthUserSerializer(BaseUserSerializer):
     class Meta:
         model = User
         fields = ("id", "username", "first_name", "last_name", "email", "phone_number", "is_online", "last_online", )
 
 
-class UserMoreInfoSerializer(BaserUserSerializer):
+class UserMoreInfoSerializer(BaseUserSerializer):
     is_blocked = serializers.SerializerMethodField()
     is_blocked_you = serializers.SerializerMethodField()
 
