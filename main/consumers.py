@@ -5,7 +5,7 @@ from channels.db import database_sync_to_async
 from channels.generic.websocket import AsyncWebsocketConsumer
 
 from main.api.serializers.allMessages import ChatSerializer
-from main.models import Chat
+from main.models import Chat, ChatMember
 
 
 def convert_datetime_to_strings(data):
@@ -36,8 +36,14 @@ def change_online_status(user_obj, is_online):
     user_obj.profile.is_online = is_online
     return user_obj.profile.save()
 
+@database_sync_to_async
+def send_chat_members(self, chat_obj, data):
+    chat_members = ChatMember.filtered_objects.filter(chat=chat_obj)
+    for member in chat_members:
+        self.channel_layer.group_send(f"user_{member.id}", data)
+
 class ChatMessageBaseConsumer(AsyncWebsocketConsumer):
-    groups = ["chat_list", ]
+    groups = []
     user_group_list = []
     chat_obj = None
     user_obj = None
@@ -73,6 +79,9 @@ class ChatMessagesConsumer(ChatMessageBaseConsumer):
             "updated_chat": await serialize_chat(self.chat_obj, self.user_obj),
             "message": text_data,
         }
+
+        send_chat_members(self, self.chat_obj, data)
+
         for gp in self.user_group_list:
             await self.channel_layer.group_send(gp, data)
 
@@ -88,6 +97,7 @@ class ChatConsumer(ChatMessageBaseConsumer):
     async def connect(self):
         self.user_obj = self.scope['user']
         self.user_group_list.extend(self.groups)
+        self.user_group_list.append(f"user_{self.user_obj.id}")
 
         if self.user_obj:
             await change_online_status(self.user_obj, True)

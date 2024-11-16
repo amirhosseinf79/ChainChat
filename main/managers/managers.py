@@ -41,7 +41,9 @@ class ChatManager(models.Manager):
     def find_chat(self, title):
         query = (Q(group__isnull=False) & Q(group__name__contains=title)) | \
                 (Q(group__isnull=True) & (Q(members__member__username__contains=title) |
-                                          Q(members__member__first_name__contains=title)))
+                                          Q(members__member__first_name__contains=title) |
+                                          Q(members__member__last_name__contains=title)
+                                          ))
 
         obj_list = self.filter(query).distinct()
         return obj_list

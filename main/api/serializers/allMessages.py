@@ -23,6 +23,7 @@ class ChatSerializer(serializers.ModelSerializer):
     start_with = serializers.IntegerField(write_only=True, required=True)
     is_group = serializers.SerializerMethodField(read_only=True)
     title = serializers.SerializerMethodField(read_only=True)
+    is_online = serializers.SerializerMethodField(read_only=True)
     is_joined = serializers.SerializerMethodField(read_only=True)
     members = serializers.SerializerMethodField(read_only=True)
     unread_messages = serializers.SerializerMethodField(read_only=True)
@@ -30,7 +31,7 @@ class ChatSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Chat
-        fields = ("user", "start_with", "is_group", "is_joined","title",
+        fields = ("id", "user", "start_with", "is_group", "is_joined","title", "is_online",
                   "members", "unread_messages", "last_message")
 
     def get_is_group(self, instance):
@@ -51,6 +52,17 @@ class ChatSerializer(serializers.ModelSerializer):
 
         return title
 
+    def get_is_online(self, instance):
+        is_group = bool(instance.group)
+        user_obj = self.context.get("user", None)
+
+        if not is_group:
+            second_user = ChatMember.objects.filter(chat=instance).exclude(member=user_obj).first()
+            if second_user:
+                return second_user.member.profile.is_online
+
+        return False
+
     def get_is_joined(self, instance):
         user_obj = self.context.get("user", None)
         return instance.members.filter(member=user_obj).exists()
@@ -63,7 +75,8 @@ class ChatSerializer(serializers.ModelSerializer):
         return instance.unread_messages_count(user_obj.id)
 
     def get_last_message(self, instance):
-        all_messages = instance.get_messages(self.context.get('user', None))
+        user_obj = self.context.get('user', None)
+        all_messages = instance.get_messages(user_obj)
         message_obj = all_messages.first() if all_messages.count() > 0 else None
         data = None
 
@@ -72,6 +85,8 @@ class ChatSerializer(serializers.ModelSerializer):
                 "author": UserSerializer(message_obj.author).data,
                 "preview": f"{message_obj}",
                 "created_at": message_obj.created_at,
+                "sent_by_me": message_obj.author == user_obj,
+                "seen_users": SeenUserSerializer(message_obj.seen_users.filter(is_deleted=False), many=True).data,
             }
 
         return data
@@ -114,6 +129,7 @@ class BaseMessageSerializer(serializers.Serializer):
     reply_id = serializers.IntegerField(write_only=True)
     author_id = serializers.IntegerField(write_only=True, required=True)
     chat_id = serializers.IntegerField(write_only=True, required=True)
+    sent_by_me = serializers.SerializerMethodField(read_only=True)
 
     def get_reply(self, instance):
         reply_data = None
@@ -121,6 +137,10 @@ class BaseMessageSerializer(serializers.Serializer):
             reply_data = {"message_id": instance.reply.id, "preview": f"{instance.reply}"}
 
         return reply_data
+
+    def get_sent_by_me(self, instance):
+        user_obj = self.context.get("user", None)
+        return user_obj == instance.author
 
     def validate(self, attrs):
         attrs = super().validate(attrs)

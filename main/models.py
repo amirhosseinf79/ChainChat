@@ -250,7 +250,9 @@ class MessageController(BaseMessage):
         elif self.photo:
             value = "photo"
         elif self.message:
-            value = self.message.text
+            l_text = self.message.text.split(" ")[0:5]
+            cont = "..." if len(l_text) > 5 else ""
+            value = " ".join(l_text) + cont
 
         return value
 
