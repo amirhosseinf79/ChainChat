@@ -55,8 +55,8 @@ class FilteredChatManager(ChatManager):
 
 
 class GroupManager(models.Manager):
-    def create_group(self, name, user):
-        obj = self.create(name=name)
+    def create_group(self, name, user, invite_link):
+        obj = self.create(name=name, invite_link=invite_link)
         obj.admins.create(admin_id=user)
         obj.chat.members.create(member_id=user)
         return obj

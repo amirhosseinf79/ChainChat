@@ -72,7 +72,7 @@ class ChatSerializer(serializers.ModelSerializer):
 
     def get_unread_messages(self, instance):
         user_obj = self.context.get("user", None)
-        return instance.unread_messages_count(user_obj.id)
+        return instance.unread_messages_count(user_obj.id) if user_obj else None
 
     def get_last_message(self, instance):
         user_obj = self.context.get('user', None)

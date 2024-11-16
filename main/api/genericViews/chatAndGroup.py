@@ -15,7 +15,7 @@ class CreateBaseView(AuthRequiredView):
     def post(self, request):
         raw_data = request.data.copy()
         raw_data.update({"user": request.user.id})
-        serializer = self.serializer_class(data=raw_data)
+        serializer = self.serializer_class(data=raw_data, context={'user': request.user})
 
         if serializer.is_valid():
             serializer.save()
