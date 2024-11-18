@@ -109,18 +109,13 @@ class ChatMembersView(ChatViewBase):
             raise Http404
 
 
-class CreateMessageView(ManageMessageBase):
+class CreateEditMessageView(ManageMessageBase):
     def post(self, request, pk):
         raw_data = request.data.copy()
         raw_data.update({"author_id": request.user.id, "chat_id": pk})
-        self.decide_serializer(request, raw_data)
-        return self.handle_serializer_response()
-
-class EditMessageView(ManageMessageBase):
-    def put(self, request, pk):
-        raw_data = request.data.copy()
-        raw_data.update({"author_id": request.user.id, "chat_id": pk})
-        self.get_message_id(raw_data)
+        message_id = raw_data.get("message_id", -1)
+        if message_id > 0:
+            self.get_message_id(raw_data)
         self.decide_serializer(request, raw_data)
         return self.handle_serializer_response()
 
