@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-@d3wr-f@+ii-*wx^e9bu!$rnb$#*(6%puz5m!b#gy+dp0xgk(@
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ["65.109.211.128", "app.smart-vip.ir", "api.smart-vip.ir"]
+ALLOWED_HOSTS = ["app.smart-vip.ir", "api.smart-vip.ir", "127.0.0.1", "localhost"]
 
 
 # Application definition

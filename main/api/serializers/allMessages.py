@@ -42,13 +42,19 @@ class ChatSerializer(serializers.ModelSerializer):
         user_obj = self.context.get("user", None)
 
         if is_group:
-            title = instance.group.name
+            title = {1: instance.group.name}
         else:
-            second_user = ChatMember.objects.filter(chat=instance).exclude(member=user_obj).first()
-            if second_user:
-                title = (second_user.member.first_name + " " + second_user.member.last_name).strip()
+            users = ChatMember.objects.filter(chat=instance)
+            if users:
+                first_user = users.first().member
+                last_user = users.last().member
+                title = {
+                    first_user.id: first_user.first_name + " " + first_user.last_name,
+                    last_user.id: last_user.first_name + " " + last_user.last_name,
+                }
             else:
-                title = (user_obj.first_name + " " + user_obj.last_name).strip()
+                first_user = users.first().member
+                title = {first_user.id: first_user.first_name + " " + first_user.last_name}
 
         return title
 
