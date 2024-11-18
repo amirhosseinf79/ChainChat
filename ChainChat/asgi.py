@@ -18,7 +18,7 @@ os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'ChainChat.settings')
 
 
 def application(*args, **kwargs):
-    from main.ws_urls import URL_PATTERNS
+    from main.ws_urls import get_asgi_urls
     from main.ws_middleware import QueryAuthMiddleware
 
     return ProtocolTypeRouter(
@@ -27,7 +27,7 @@ def application(*args, **kwargs):
             'websocket': AllowedHostsOriginValidator(
                     CookieMiddleware(
                         SessionMiddleware(
-                            QueryAuthMiddleware(URLRouter(URL_PATTERNS))
+                            QueryAuthMiddleware(URLRouter(get_asgi_urls()))
                         )
                     )
             )
