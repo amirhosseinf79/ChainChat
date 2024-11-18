@@ -17,7 +17,7 @@ from channels.sessions import CookieMiddleware, SessionMiddleware
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'ChainChat.settings')
 
 
-def application():
+def application(*args, **kwargs):
     from main.ws_urls import URL_PATTERNS
     from main.ws_middleware import QueryAuthMiddleware
 
