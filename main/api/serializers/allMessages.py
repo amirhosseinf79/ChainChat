@@ -123,24 +123,34 @@ class ChatSerializer(serializers.ModelSerializer):
 
 
 class BaseMessageSerializer(serializers.Serializer):
+    type = serializers.SerializerMethodField(read_only=True)
     author = UserSerializer(read_only=True)
     chat = ChatSerializer(read_only=True, context=context)
     reply = serializers.SerializerMethodField(read_only=True)
-    reply_id = serializers.IntegerField(write_only=True)
+    # sent_by_me = serializers.SerializerMethodField(read_only=True)
+    seen_by = serializers.SerializerMethodField(read_only=True)
+
+    reply_id = serializers.IntegerField(write_only=True, required=False)
     author_id = serializers.IntegerField(write_only=True, required=True)
     chat_id = serializers.IntegerField(write_only=True, required=True)
-    sent_by_me = serializers.SerializerMethodField(read_only=True)
+
+    def get_seen_by(self, instance):
+        return []
 
     def get_reply(self, instance):
         reply_data = None
         if instance.reply:
-            reply_data = {"message_id": instance.reply.id, "preview": f"{instance.reply}"}
+            reply_data = {
+                "message_id": instance.reply.id,
+                "preview": f"{instance.reply}",
+                "author": instance.author.first_name
+            }
 
         return reply_data
 
-    def get_sent_by_me(self, instance):
-        user_obj = self.context.get("user", None)
-        return user_obj == instance.author
+    # def get_sent_by_me(self, instance):
+    #     user_obj = self.context.get("user", None)
+    #     return user_obj == instance.author
 
     def validate(self, attrs):
         attrs = super().validate(attrs)
@@ -185,6 +195,8 @@ class BaseMessageSerializer(serializers.Serializer):
 
 
 class MessageSerializer(BaseMessageSerializer, serializers.ModelSerializer):
+    def get_type(self, instance):
+        return "message"
 
     class Meta:
         model = Message
@@ -193,6 +205,9 @@ class MessageSerializer(BaseMessageSerializer, serializers.ModelSerializer):
 
 
 class PhotoSerializer(BaseMessageSerializer, serializers.ModelSerializer):
+    def get_type(self, instance):
+        return "photo"
+
     class Meta:
         model = Photo
         fields = "__all__"
@@ -200,6 +215,9 @@ class PhotoSerializer(BaseMessageSerializer, serializers.ModelSerializer):
 
 
 class VideoSerializer(BaseMessageSerializer, serializers.ModelSerializer):
+    def get_type(self, instance):
+        return "video"
+
     class Meta:
         model = Video
         fields = "__all__"
@@ -225,7 +243,6 @@ class AllMessageSerializer(BaseMessageSerializer, serializers.ModelSerializer):
     message = MessageSerializer(read_only=True)
     photo = PhotoSerializer(read_only=True)
     video = VideoSerializer(read_only=True)
-    seen_by = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = MessageController
@@ -244,10 +261,10 @@ class AllMessageSerializer(BaseMessageSerializer, serializers.ModelSerializer):
         }
         for k, v in data.items():
             if v and (k == "video" or k == "photo" or k == "message"):
-                new_data.update({f"type": k})
+                # new_data.update({f"type": k})
                 new_data.update(v)
 
-            else:
+            elif v:
                 new_data.update({k: v})
 
         return new_data

@@ -14,7 +14,7 @@ class AuthLoginView(ObtainAuthToken):
         token = Token.objects.get(key=response.data['token'])
         # obj = ExpiringToken.objects.create(token=token)
         # token.save()
-        return Response({'token': token.key, 'expires': token.options.expiration_date})
+        return Response({'token': token.key, "user_id": token.user_id, 'expires': token.options.expiration_date})
 
 
 class AuthCreateUserView(APIView):

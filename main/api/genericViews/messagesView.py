@@ -46,6 +46,7 @@ class ManageMessageBase(AuthRequiredView):
 
     def decide_serializer(self, request, raw_data):
         msg_type = raw_data.pop("type", None)
+        reply_id = raw_data.pop("reply_id", None)
         self.decide_model(request)
         self.request = request
 
@@ -64,8 +65,25 @@ class ManageMessageBase(AuthRequiredView):
             except self.default_model.DoesNotExist:
                 raise Http404
 
+        if reply_id:
+            try:
+                instance_obj = self.default_model.objects.get(pk=reply_id)
+                try:
+                    raw_data["reply_id"] = instance_obj.message_controller.id
+                except Exception as e:
+                    try:
+                        print(e)
+                        raw_data["reply_id"] = instance_obj.video_controller.id
+                    except Exception as e:
+                        print(e)
+                        raw_data["reply_id"] = instance_obj.photo_controller.id
+
+            except self.default_model.DoesNotExist:
+                pass
+
         if self.default_serializer:
-            self.default_serializer_class = self.default_serializer(instance=self.instance_obj, data=raw_data)
+            self.default_serializer_class = self.default_serializer(
+                instance=self.instance_obj, data=raw_data, context={'user': self.request.user})
 
     def handle_serializer_response(self):
         if not self.default_serializer_class:
