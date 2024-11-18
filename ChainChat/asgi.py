@@ -16,18 +16,20 @@ from channels.sessions import CookieMiddleware, SessionMiddleware
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'ChainChat.settings')
 
-from main.ws_urls import URL_PATTERNS
-from main.ws_middleware import QueryAuthMiddleware
 
-application = ProtocolTypeRouter(
-    {
-        'http': get_asgi_application(),
-        'websocket': AllowedHostsOriginValidator(
-                CookieMiddleware(
-                    SessionMiddleware(
-                        QueryAuthMiddleware(URLRouter(URL_PATTERNS))
+def application():
+    from main.ws_urls import URL_PATTERNS
+    from main.ws_middleware import QueryAuthMiddleware
+
+    return ProtocolTypeRouter(
+        {
+            'http': get_asgi_application(),
+            'websocket': AllowedHostsOriginValidator(
+                    CookieMiddleware(
+                        SessionMiddleware(
+                            QueryAuthMiddleware(URLRouter(URL_PATTERNS))
+                        )
                     )
-                )
-        )
-    }
-)
+            )
+        }
+    )
