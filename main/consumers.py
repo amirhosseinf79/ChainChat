@@ -1,4 +1,5 @@
 import json
+import time
 from datetime import datetime
 
 from channels.db import database_sync_to_async
@@ -32,34 +33,13 @@ def get_chat(chat_id):
     return obj
 
 @database_sync_to_async
+def get_user_chats(user_obj):
+    return ChatMember.filtered_objects.filter(member=user_obj).values_list("chat_id", flat=True).distinct()
+
+@database_sync_to_async
 def change_online_status(user_obj, is_online):
     user_obj.profile.is_online = is_online
     return user_obj.profile.save()
-
-async def notify_user_friends(self, user_obj):
-    chats = Chat.filtered_objects.filter(group__isnull=True, members__member=user_obj).distinct()
-    main_data = {}
-    async for chat in chats:
-        raw_data = {
-            "type": "message.send",
-            "updated_chat": await serialize_chat(chat, user_obj),
-            "user_status": await get_user_profile(user_obj),
-            "message": None,
-            "action": "online_status",
-        }
-        users = await get_chat_members(chat)
-
-        for uid in users:
-            main_data[uid] = raw_data.copy()
-
-    for uid, data in main_data.items():
-        if uid == f"user_{user_obj.id}":
-            continue
-        await self.channel_layer.group_send(uid, data)
-
-async def get_chat_members(chat_obj):
-    tmp = ChatMember.filtered_objects.filter(chat=chat_obj).distinct().values_list("member_id", flat=True).distinct()
-    return [f"user_{uid}" async for uid in tmp]
 
 @database_sync_to_async
 def get_user_profile(user_obj):
@@ -68,9 +48,35 @@ def get_user_profile(user_obj):
 
 class ChatMessageBaseConsumer(AsyncWebsocketConsumer):
     groups = []
-    user_group_list = []
+    user_group_list = {}
     chat_obj = None
     user_obj = None
+
+    async def notify_user_friends(self, user_status):
+        user_name = f"user_{self.user_obj.id}"
+        chats = await get_user_chats(self.user_obj)
+        async for chat in chats:
+            chat_obj = await get_chat(chat)
+            chat_name = f"chat_{chat}"
+
+            if chat_name in self.user_group_list:
+                if user_name not in self.user_group_list[chat_name]:
+                    self.user_group_list[chat_name].append(user_name)
+
+                sent = []
+                for user in self.user_group_list[chat_name]:
+                    if user != user_name:
+                        data = {
+                            "type": "message.send",
+                            "updated_chat": await serialize_chat(chat_obj, self.user_obj),
+                            "user_status": user_status,
+                            "message": None,
+                            "action": "online_status",
+                        }
+                        sent.append(user)
+                        await self.channel_layer.group_send(user, data)
+            else:
+                self.user_group_list[chat_name] = [user_name]
 
     async def message_send(self, event):
         data = {
@@ -78,6 +84,7 @@ class ChatMessageBaseConsumer(AsyncWebsocketConsumer):
             "user_status": event["user_status"],
             "message": event["message"],
             "action": event["action"],
+            "time": time.time(),
         }
         await self.send(text_data=json.dumps(data))
 
@@ -85,16 +92,21 @@ class ChatMessageBaseConsumer(AsyncWebsocketConsumer):
 class ChatMessagesConsumer(ChatMessageBaseConsumer):
     async def connect(self):
         chat_id = self.scope['url_route']['kwargs']['id']
-        self.user_group_list.extend(self.groups)
-        self.user_group_list.append(f"chat_{chat_id}")
-
         self.chat_obj = await get_chat(chat_id)
         self.user_obj = self.scope['user']
 
         if self.chat_obj and self.user_obj:
-            await change_online_status(self.user_obj, True)
-            for gp in self.user_group_list:
-                await self.channel_layer.group_add(gp, self.channel_name)
+            chat_name = f"chat_{chat_id}"
+            user_name = f"user_{self.user_obj.id}"
+
+            if chat_name in self.user_group_list:
+                if user_name not in self.user_group_list[chat_name]:
+                    self.user_group_list[chat_name].append(user_name)
+            else:
+                self.user_group_list[chat_name] = [f"user_{self.user_obj}"]
+                await change_online_status(self.user_obj, True)
+
+            await self.channel_layer.group_add(user_name, self.channel_name)
 
             await self.accept()
 
@@ -114,39 +126,30 @@ class ChatMessagesConsumer(ChatMessageBaseConsumer):
             "action": text_data.get("action", "no_action"),
         }
 
-        users = await get_chat_members(self.chat_obj)
-
-        for uid in users:
-            await self.channel_layer.group_send(uid, data)
+        chat_name = f"chat_{self.chat_obj.id}"
+        if chat_name in self.user_group_list:
+            for user in self.user_group_list[chat_name]:
+                await self.channel_layer.group_send(user, data)
 
     async def disconnect(self, code):
         if self.user_obj:
             await change_online_status(self.user_obj, False)
-
-        for gp in self.user_group_list:
-            await self.channel_layer.group_discard(gp, self.channel_name)
+            await self.channel_layer.group_discard(f"user_{self.user_obj.id}", self.channel_name)
 
 
 class ChatConsumer(ChatMessageBaseConsumer):
     async def connect(self):
         self.user_obj = self.scope['user']
-        self.user_group_list.extend(self.groups)
 
         if self.user_obj:
-            self.user_group_list.append(f"user_{self.user_obj.id}")
+            await self.notify_user_friends(True)
+            user_name = f"user_{self.user_obj.id}"
             await change_online_status(self.user_obj, True)
-
-            await notify_user_friends(self, self.user_obj)
-
-            for uid in self.user_group_list:
-                await self.channel_layer.group_add(uid, self.channel_name)
-
+            await self.channel_layer.group_add(user_name, self.channel_name)
             await self.accept()
 
     async def disconnect(self, code):
         if self.user_obj:
+            await self.notify_user_friends(False)
             await change_online_status(self.user_obj, False)
-            await notify_user_friends(self, self.user_obj)
-
-        for uid in self.user_group_list:
-            await self.channel_layer.group_discard(uid, self.channel_name)
+            await self.channel_layer.group_discard(f"user_{self.user_obj.id}", self.channel_name)

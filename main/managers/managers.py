@@ -98,7 +98,7 @@ class FilteredMessageManager(MessageManager):
 class MessageControlManager(MessageManager):
     def mark_seen(self, chat_id, author_id, user_id, message_id):
         unread_messages = self.filter(chat_id=chat_id, id__lte=message_id) \
-            .exclude(author_id=author_id, seen_users__user_id=user_id)
+            .exclude(author_id=author_id).exclude(seen_users__user_id=user_id)
 
         for message in unread_messages:
             message.seen_users.update_or_create(user_id=user_id)

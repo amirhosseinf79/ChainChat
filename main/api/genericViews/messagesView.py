@@ -102,6 +102,9 @@ class ManageMessageBase(AuthRequiredView):
 
         try:
             func(**raw_data)
+            self.base_data.update({
+                "success": True,
+            })
         except TypeError:
             st = status.HTTP_400_BAD_REQUEST
             self.base_data.update({
