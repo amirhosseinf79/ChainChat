@@ -65,16 +65,18 @@ class ChatMessageBaseConsumer(AsyncWebsocketConsumer):
 
                 sent = []
                 for user in self.user_group_list[chat_name]:
-                    if user != user_name:
-                        data = {
-                            "type": "message.send",
-                            "updated_chat": await serialize_chat(chat_obj, self.user_obj),
-                            "user_status": user_status,
-                            "message": None,
-                            "action": "online_status",
-                        }
-                        sent.append(user)
-                        await self.channel_layer.group_send(user, data)
+                    if user not in sent:
+                        if user != user_name:
+                            data = {
+                                "type": "message.send",
+                                "updated_chat": await serialize_chat(chat_obj, self.user_obj),
+                                "user_status": user_status,
+                                "message": None,
+                                "action": "online_status",
+                            }
+                            sent.append(user)
+                            print(user)
+                            await self.channel_layer.group_send(user, data)
             else:
                 self.user_group_list[chat_name] = [user_name]
 
@@ -140,6 +142,7 @@ class ChatMessagesConsumer(ChatMessageBaseConsumer):
 class ChatConsumer(ChatMessageBaseConsumer):
     async def connect(self):
         self.user_obj = self.scope['user']
+        print(self.user_group_list)
 
         if self.user_obj:
             await self.notify_user_friends(True)
