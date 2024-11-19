@@ -149,7 +149,7 @@ class BaseMessageSerializer(serializers.Serializer):
             reply_data = {
                 "message_id": instance.reply.id,
                 "preview": f"{instance.reply}",
-                "author": instance.author.first_name
+                "author": instance.reply.author.first_name
             }
 
         return reply_data
