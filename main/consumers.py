@@ -105,7 +105,7 @@ class ChatMessagesConsumer(ChatMessageBaseConsumer):
                 if user_name not in self.user_group_list[chat_name]:
                     self.user_group_list[chat_name].append(user_name)
             else:
-                self.user_group_list[chat_name] = [f"user_{self.user_obj}"]
+                self.user_group_list[chat_name] = [user_name]
                 await change_online_status(self.user_obj, True)
 
             await self.channel_layer.group_add(user_name, self.channel_name)
@@ -142,7 +142,6 @@ class ChatMessagesConsumer(ChatMessageBaseConsumer):
 class ChatConsumer(ChatMessageBaseConsumer):
     async def connect(self):
         self.user_obj = self.scope['user']
-        print(self.user_group_list)
 
         if self.user_obj:
             await self.notify_user_friends(True)
