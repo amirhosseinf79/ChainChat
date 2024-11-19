@@ -23,8 +23,9 @@ class ChatManager(models.Manager):
                 if chat_ins.exists():
                     chat = chat_ins.first()
                     obj, created = chat.members.get_or_create(member_id=user)
-                    obj.is_deleted = False
-                    obj.save()
+                    if obj.is_deleted:
+                        obj.is_deleted = False
+                        obj.save()
 
                     obj, created = chat.members.get_or_create(member_id=start_with)
                     obj.is_deleted = False
